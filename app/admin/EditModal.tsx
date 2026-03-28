@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-// Yahan saare icons import hona zaroori hain
 import { 
   X, Save, ShieldCheck, MapPin, Info, 
   Eye, EyeOff, Navigation, Loader2, Database, Hash 
@@ -49,12 +48,13 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
         {/* --- BODY --- */}
         <div className="p-8 space-y-8 overflow-y-auto custom-scrollbar">
           
-          {/* Hardware Identity */}
+          {/* Hardware Identity - UPDATED TO device_sn */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
             <div className="p-5 bg-slate-50 border-2 border-dashed border-slate-200 rounded-[30px]">
               <label className="text-[11px] font-[900] uppercase text-slate-400 mb-2 block tracking-widest text-left">Serial Number</label>
               <div className="flex items-center gap-2 text-slate-600 font-mono font-[1000] text-[18px] uppercase tracking-tighter">
-                <Hash size={18} /> {device.sn}
+                {/* 🚨 SN changed to device_sn below */}
+                <Hash size={18} /> {device.device_sn} 
               </div>
             </div>
             <div className="space-y-2 text-left">

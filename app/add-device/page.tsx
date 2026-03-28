@@ -4,9 +4,9 @@ import { supabase } from '@/lib/supabaseClient';
 import { MapPin, CheckCircle, Rocket, Loader2, Database, Disc, Navigation, MousePointer2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-// --- TypeScript Interfaces ---
+// --- TypeScript Interfaces Updated ---
 interface FormData {
-  sn: string;
+  device_sn: string; // ✅ Changed from sn to device_sn
   site_name: string;
   category: string;
   model: string;
@@ -26,15 +26,23 @@ export default function AddDevicePage() {
   const [isManual, setIsManual] = useState(false);
 
   const [formData, setFormData] = useState<FormData>({
-    sn: '', site_name: '', category: 'DVR (Analog)',
-    model: '', ip_address: '', user_pass: '',
-    admin_pass: '', v_code: '', device_notes: '',
+    device_sn: '', // ✅ Updated
+    site_name: '', 
+    category: 'DVR (Analog)',
+    model: '', 
+    ip_address: '', 
+    user_pass: '',
+    admin_pass: '', 
+    v_code: '', 
+    device_notes: '',
     radius: '100',
-    latitude: '', longitude: '' 
+    latitude: '', 
+    longitude: '' 
   });
 
   const handleSave = async () => {
-    if (!formData.sn || !formData.site_name) return alert("⚠️ Please fill SN and Site Name!");
+    // ✅ Updated Validation
+    if (!formData.device_sn || !formData.site_name) return alert("⚠️ Please fill Device SN and Site Name!");
     
     setLoading(true);
     let finalLat: number | null = null;
@@ -66,9 +74,10 @@ export default function AddDevicePage() {
       }
     }
 
+    // 🟢 Supabase Insert Updated for 'device_sn'
     const { error } = await supabase.from('devices').insert([
       { 
-        sn: formData.sn,
+        device_sn: formData.device_sn, // ✅ Updated key
         site_name: formData.site_name,
         category: formData.category,
         model: formData.model,
@@ -98,7 +107,6 @@ export default function AddDevicePage() {
         
         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-600 to-emerald-400"></div>
 
-        {/* Header */}
         <div className="flex flex-col items-center mb-8 text-center">
           <div className="bg-blue-50 p-5 rounded-[25px] mb-3 shadow-inner">
              <Rocket className="text-blue-600" size={32} strokeWidth={2.5} />
@@ -107,13 +115,12 @@ export default function AddDevicePage() {
           <p className="text-slate-400 text-[10px] font-black mt-2 tracking-widest uppercase opacity-60 italic">CCTV Inventory Portal</p>
         </div>
 
-        {/* Form Body */}
         <div className="space-y-5 max-h-[55vh] overflow-y-auto pr-3 custom-scroll mb-8 px-1">
           
-          {/* ✅ Fixed: (v: string) explicitly typed to prevent build error */}
-          <InputField label="🔢 SERIAL NUMBER (SN)" placeholder="SN-XXXXX" 
-            value={formData.sn}
-            onChange={(v: string) => setFormData({...formData, sn: v.toUpperCase()})} highlight={true} />
+          {/* ✅ SN Input updated to device_sn */}
+          <InputField label="🔢 DEVICE SERIAL (SN)" placeholder="SN-XXXXX" 
+            value={formData.device_sn}
+            onChange={(v: string) => setFormData({...formData, device_sn: v.toUpperCase()})} highlight={true} />
           
           <InputField label="🏢 SITE NAME" placeholder="Ex: Shaikh Villa" 
             value={formData.site_name}
@@ -144,21 +151,10 @@ export default function AddDevicePage() {
             </div>
           </div>
 
+          {/* ... Maps & Location Logic ... */}
           <div className="bg-slate-50 p-2 rounded-[25px] flex gap-2 border border-slate-100 mt-2">
-            <button 
-              type="button"
-              onClick={() => setIsManual(false)} 
-              className={`flex-1 py-3 rounded-full text-[10px] font-black uppercase transition-all duration-300 flex items-center justify-center gap-2 ${!isManual ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400'}`}
-            >
-              <Navigation size={14} /> Auto GPS
-            </button>
-            <button 
-              type="button"
-              onClick={() => setIsManual(true)} 
-              className={`flex-1 py-3 rounded-full text-[10px] font-black uppercase transition-all duration-300 flex items-center justify-center gap-2 ${isManual ? 'bg-orange-500 text-white shadow-lg' : 'text-slate-400'}`}
-            >
-              <MousePointer2 size={14} /> Manual Pin
-            </button>
+            <button type="button" onClick={() => setIsManual(false)} className={`flex-1 py-3 rounded-full text-[10px] font-black uppercase transition-all duration-300 flex items-center justify-center gap-2 ${!isManual ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400'}`}><Navigation size={14} /> Auto GPS</button>
+            <button type="button" onClick={() => setIsManual(true)} className={`flex-1 py-3 rounded-full text-[10px] font-black uppercase transition-all duration-300 flex items-center justify-center gap-2 ${isManual ? 'bg-orange-500 text-white shadow-lg' : 'text-slate-400'}`}><MousePointer2 size={14} /> Manual Pin</button>
           </div>
 
           {isManual && (
@@ -192,7 +188,6 @@ export default function AddDevicePage() {
           </div>
         </div>
 
-        {/* Footer Action */}
         <button 
           onClick={handleSave} 
           disabled={loading}
@@ -205,20 +200,15 @@ export default function AddDevicePage() {
 
       <style jsx global>{`
         .custom-scroll::-webkit-scrollbar { width: 4px; }
-        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 20px; }
       `}</style>
     </div>
   );
 }
 
-// ✅ Sub-component with Explicit Types
+// Sub-component remains the same
 interface InputProps {
-  label: string;
-  placeholder: string;
-  onChange: (value: string) => void;
-  value: string;
-  highlight?: boolean;
+  label: string; placeholder: string; onChange: (value: string) => void; value: string; highlight?: boolean;
 }
 
 function InputField({ label, placeholder, onChange, value, highlight = false }: InputProps) {
@@ -227,9 +217,7 @@ function InputField({ label, placeholder, onChange, value, highlight = false }: 
       <label className="text-[10px] text-slate-400 uppercase ml-4 tracking-widest leading-none">{label}</label>
       <input 
         className={`w-full p-5 mt-2 bg-[#f8fafc] border-2 rounded-[25px] outline-none text-[15px] font-bold text-slate-700 transition-all ${highlight ? 'border-emerald-100 focus:border-emerald-400' : 'border-slate-50 focus:border-blue-200'}`}
-        placeholder={placeholder} 
-        value={value}
-        onChange={(e) => onChange(e.target.value)} 
+        placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} 
       />
     </div>
   );

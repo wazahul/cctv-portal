@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
-import { Rocket, Lock, Mail, Loader2, ShieldCheck } from "lucide-react";
+import { Rocket, Lock, Mail, Loader2, ShieldCheck, AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,87 +16,102 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      setError("Invalid Email or Password");
+      if (signInError) {
+        setError("Access Denied: Invalid Credentials");
+        setLoading(false);
+      } else {
+        // ✅ Login successful, redirecting to Admin Central
+        // Note: Admin page par 'device_sn' ka logic setup hona zaroori hai
+        router.push("/admin"); 
+      }
+    } catch (err) {
+      setError("System Connection Error");
       setLoading(false);
-    } else {
-      router.push("/admin"); // Login ke baad Admin Central par redirect
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#f1f5f9] flex items-center justify-center p-4 font-sans">
-      <div className="w-full max-w-[420px] bg-white rounded-[50px] p-10 shadow-2xl border border-white relative overflow-hidden text-left">
+    <div className="min-h-screen bg-[#f1f5f9] flex items-center justify-center p-4 font-sans text-left">
+      <div className="w-full max-w-[420px] bg-white rounded-[55px] p-12 shadow-[0_30px_80px_rgba(0,0,0,0.1)] border border-white relative overflow-hidden">
         
-        {/* Top Accent Line */}
-        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-600 to-indigo-500"></div>
+        {/* Top Gradient Bar */}
+        <div className="absolute top-0 left-0 w-full h-2.5 bg-gradient-to-r from-blue-600 via-indigo-500 to-emerald-500"></div>
 
         {/* Header Section */}
-        <div className="flex flex-col items-center mb-10 text-center">
-          <div className="bg-blue-50 p-5 rounded-[25px] mb-4 shadow-inner group transition-all">
-             <Rocket className="text-blue-600 group-hover:rotate-12 transition-transform" size={36} strokeWidth={2.5} />
+        <div className="flex flex-col items-center mb-12 text-center">
+          <div className="bg-blue-50/50 p-6 rounded-[30px] mb-5 shadow-inner border border-blue-100 group transition-all">
+             <Rocket className="text-blue-600 group-hover:-rotate-12 transition-transform" size={38} strokeWidth={2.5} />
           </div>
-          <h1 className="text-[28px] font-[1000] text-slate-900 tracking-tighter uppercase italic leading-none">Portal Access</h1>
-          <p className="text-slate-400 text-[10px] font-black mt-3 tracking-[3px] uppercase opacity-70">Secure Admin Login</p>
+          <h1 className="text-[32px] font-[1000] text-slate-900 tracking-tighter uppercase italic leading-none">Console Access</h1>
+          <p className="text-slate-400 text-[11px] font-[1000] mt-4 tracking-[4px] uppercase opacity-80 flex items-center gap-2">
+            <ShieldCheck size={14} className="text-emerald-500" /> Secure Terminal 2026
+          </p>
         </div>
 
-        {/* Login Form */}
-        <form onSubmit={handleLogin} className="space-y-6">
+        {/* Form Section */}
+        <form onSubmit={handleLogin} className="space-y-7">
           
-          <div className="space-y-2">
-            <label className="text-[10px] text-slate-400 font-black uppercase ml-5 tracking-widest">Official Email</label>
-            <div className="relative">
-              <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-blue-500/50" size={18} />
+          <div className="space-y-2.5">
+            <label className="text-[10px] text-slate-400 font-[1000] uppercase ml-6 tracking-[2px]">Admin ID / Email</label>
+            <div className="relative group">
+              <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-blue-500 transition-colors group-focus-within:text-blue-600" size={20} />
               <input 
                 type="email" 
                 required
-                placeholder="admin@company.com"
-                className="w-full p-5 pl-14 bg-slate-50 border-2 border-slate-50 rounded-[25px] outline-none text-sm font-bold text-slate-700 focus:border-blue-200 focus:bg-white transition-all shadow-sm"
+                placeholder="admin@modernenterprises.com"
+                className="w-full p-6 pl-16 bg-[#fcfdfe] border-2 border-slate-50 rounded-[30px] outline-none text-[15px] font-bold text-slate-800 focus:border-blue-400 focus:bg-white transition-all shadow-sm shadow-slate-100"
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-[10px] text-slate-400 font-black uppercase ml-5 tracking-widest">Secret Key</label>
-            <div className="relative">
-              <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-blue-500/50" size={18} />
+          <div className="space-y-2.5">
+            <label className="text-[10px] text-slate-400 font-[1000] uppercase ml-6 tracking-[2px]">Encrypted Secret Key</label>
+            <div className="relative group">
+              <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-blue-500 transition-colors group-focus-within:text-blue-600" size={20} />
               <input 
                 type="password" 
                 required
-                placeholder="••••••••"
-                className="w-full p-5 pl-14 bg-slate-50 border-2 border-slate-50 rounded-[25px] outline-none text-sm font-bold text-slate-700 focus:border-blue-200 focus:bg-white transition-all shadow-sm"
+                placeholder="••••••••••••"
+                className="w-full p-6 pl-16 bg-[#fcfdfe] border-2 border-slate-50 rounded-[30px] outline-none text-[15px] font-bold text-slate-800 focus:border-blue-400 focus:bg-white transition-all shadow-sm shadow-slate-100"
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
           </div>
 
           {error && (
-            <div className="bg-red-50 text-red-500 text-[11px] font-black uppercase p-4 rounded-2xl text-center border border-red-100 animate-pulse tracking-wider">
-              ⚠️ {error}
+            <div className="bg-red-50 text-red-600 text-[10px] font-black uppercase p-5 rounded-[25px] flex items-center justify-center gap-3 border-2 border-red-100 animate-in fade-in zoom-in-95 tracking-widest leading-none">
+              <AlertCircle size={16} /> {error}
             </div>
           )}
 
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-slate-900 hover:bg-black text-white font-[1000] py-6 rounded-[30px] flex items-center justify-center gap-3 shadow-xl active:scale-95 transition-all disabled:opacity-50 text-sm uppercase tracking-[3px] mt-4"
+            className="w-full bg-slate-900 hover:bg-black text-white font-[1000] py-7 rounded-[35px] flex items-center justify-center gap-4 shadow-2xl shadow-blue-100 active:scale-95 transition-all disabled:opacity-50 text-[16px] uppercase tracking-[4px] mt-6 border-b-4 border-slate-950 active:border-0"
           >
-            {loading ? <Loader2 className="animate-spin" size={20} /> : <ShieldCheck size={20} />} 
-            {loading ? 'Authenticating...' : 'Enter Console'}
+            {loading ? <Loader2 className="animate-spin" size={24} /> : <ShieldCheck size={24} strokeWidth={2.5} />} 
+            {loading ? 'Authenticating...' : 'INITIALIZE ACCESS'}
           </button>
         </form>
 
-        {/* Footer Info */}
-        <p className="mt-10 text-center text-[10px] font-bold text-slate-300 uppercase tracking-widest">
-          Authorized Personnel Only © 2026
-        </p>
+        <div className="mt-12 text-center">
+           <div className="h-[2px] w-12 bg-slate-100 mx-auto mb-6 rounded-full"></div>
+           <p className="text-[10px] font-black text-slate-300 uppercase tracking-[6px] italic leading-relaxed">
+             System Monitor v4.0<br/>Authorized Personnel Only
+           </p>
+        </div>
       </div>
+
+      <style jsx global>{`
+        input::placeholder { color: #cbd5e1; font-weight: 700; letter-spacing: 1px; }
+      `}</style>
     </div>
   );
 }

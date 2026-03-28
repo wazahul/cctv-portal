@@ -61,7 +61,7 @@ export default function HistoryModal({ isOpen, onClose, sn, siteName }: HistoryM
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
 
-    // 1. Logo from Public Folder (logo.ico)
+    // 1. Logo from Public Folder (logo.ico ya logo.png)
     try {
       const imgData = await getBase64ImageFromURL("/logo.ico");
       doc.addImage(imgData, "PNG", 14, 10, 20, 20);
@@ -85,7 +85,11 @@ export default function HistoryModal({ isOpen, onClose, sn, siteName }: HistoryM
     doc.setFontSize(8);
     doc.setTextColor(100);
     doc.text(`Modern Enterprises - Service Record - ${new Date().getFullYear()}`, 14, pageHeight - 12);
-    doc.text(`Page ${doc.internal.getNumberOfPages()}`, pageWidth - 25, pageHeight - 12);
+    
+    // ✅ FIXED: TypeScript cast to 'any' to bypass build error
+    const pageCount = (doc as any).internal.getNumberOfPages();
+    doc.text(`Page ${pageCount}`, pageWidth - 25, pageHeight - 12);
+    
     doc.text("This is a computer generated document.", 14, pageHeight - 8);
   };
 
@@ -187,24 +191,31 @@ export default function HistoryModal({ isOpen, onClose, sn, siteName }: HistoryM
           </div>
         </div>
 
-        <div className="p-6 max-h-[60vh] overflow-y-auto custom-scroll space-y-6 bg-[#f8fafc]/50">
+        <div className="p-6 max-h-[60vh] overflow-y-auto custom-scroll space-y-6 bg-slate-50/50">
           {loading ? (
             <div className="py-24 flex flex-col items-center"><Loader2 className="animate-spin text-blue-600" size={48} /></div>
-          ) : logs.map((log) => (
-            <div key={log.id} className="relative p-6 rounded-[35px] border border-slate-200 bg-white group hover:shadow-xl transition-all">
-              <div className="flex justify-between items-start mb-4">
-                <span className="text-[10px] font-black text-slate-500">{new Date(log.created_at).toLocaleDateString()}</span>
-                <button 
-                   onClick={() => downloadSingleReceipt(log)}
-                   className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl hover:bg-emerald-600 hover:text-white transition-all"
-                >
-                  <Printer size={16} />
-                </button>
+          ) : logs.length > 0 ? (
+            logs.map((log) => (
+              <div key={log.id} className="relative p-6 rounded-[35px] border border-slate-200 bg-white group hover:shadow-xl transition-all">
+                <div className="flex justify-between items-start mb-4">
+                  <span className="text-[10px] font-black text-slate-500">{new Date(log.created_at).toLocaleDateString()}</span>
+                  <button 
+                     onClick={() => downloadSingleReceipt(log)}
+                     className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl hover:bg-emerald-600 hover:text-white transition-all"
+                  >
+                    <Printer size={16} />
+                  </button>
+                </div>
+                <p className="text-[14px] font-black text-slate-800 uppercase">{log.technician_name}</p>
+                <p className="text-[13px] text-slate-600 italic">"{log.work_done}"</p>
               </div>
-              <p className="text-[14px] font-black text-slate-800 uppercase">{log.technician_name}</p>
-              <p className="text-[13px] text-slate-600 italic">"{log.work_done}"</p>
+            ))
+          ) : (
+            <div className="py-24 text-center opacity-20 flex flex-col items-center gap-4">
+               <ClipboardList size={64} />
+               <p className="font-black text-[10px] uppercase tracking-[5px]">No Records Found</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>

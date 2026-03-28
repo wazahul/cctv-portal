@@ -4,12 +4,28 @@ import { supabase } from '@/lib/supabaseClient';
 import { MapPin, CheckCircle, Rocket, Loader2, Database, Disc, Navigation, MousePointer2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
+// --- TypeScript Interfaces ---
+interface FormData {
+  sn: string;
+  site_name: string;
+  category: string;
+  model: string;
+  ip_address: string;
+  user_pass: string;
+  admin_pass: string;
+  v_code: string;
+  device_notes: string;
+  radius: string;
+  latitude: string;
+  longitude: string;
+}
+
 export default function AddDevicePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [isManual, setIsManual] = useState(false);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     sn: '', site_name: '', category: 'DVR (Analog)',
     model: '', ip_address: '', user_pass: '',
     admin_pass: '', v_code: '', device_notes: '',
@@ -25,7 +41,6 @@ export default function AddDevicePage() {
     let finalLng: number | null = null;
 
     if (isManual) {
-      // --- MANUAL MODE LOGIC ---
       finalLat = parseFloat(formData.latitude.trim());
       finalLng = parseFloat(formData.longitude.trim());
       
@@ -35,7 +50,6 @@ export default function AddDevicePage() {
         return;
       }
     } else {
-      // --- AUTO MODE LOGIC ---
       try {
         const pos = await new Promise<GeolocationPosition>((res, rej) => 
           navigator.geolocation.getCurrentPosition(res, rej, { 
@@ -52,7 +66,6 @@ export default function AddDevicePage() {
       }
     }
 
-    // Database Update
     const { error } = await supabase.from('devices').insert([
       { 
         sn: formData.sn,
@@ -80,7 +93,7 @@ export default function AddDevicePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f1f5f9] flex items-center justify-center p-4 font-sans">
+    <div className="min-h-screen bg-[#f1f5f9] flex items-center justify-center p-4 font-sans text-left">
       <div className="w-full max-w-[480px] bg-white rounded-[50px] p-10 shadow-2xl border border-white relative overflow-hidden">
         
         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-600 to-emerald-400"></div>
@@ -97,12 +110,14 @@ export default function AddDevicePage() {
         {/* Form Body */}
         <div className="space-y-5 max-h-[55vh] overflow-y-auto pr-3 custom-scroll mb-8 px-1">
           
+          {/* ✅ Fixed: (v: string) explicitly typed to prevent build error */}
           <InputField label="🔢 SERIAL NUMBER (SN)" placeholder="SN-XXXXX" 
             value={formData.sn}
-            onChange={(v) => setFormData({...formData, sn: v.toUpperCase()})} highlight={true} />
+            onChange={(v: string) => setFormData({...formData, sn: v.toUpperCase()})} highlight={true} />
           
           <InputField label="🏢 SITE NAME" placeholder="Ex: Shaikh Villa" 
-            onChange={(v) => setFormData({...formData, site_name: v})} />
+            value={formData.site_name}
+            onChange={(v: string) => setFormData({...formData, site_name: v})} />
 
           <div className="grid grid-cols-2 gap-4">
             <div className="text-left font-bold">
@@ -129,7 +144,6 @@ export default function AddDevicePage() {
             </div>
           </div>
 
-          {/* 📍 MODE TOGGLE: Auto vs Manual */}
           <div className="bg-slate-50 p-2 rounded-[25px] flex gap-2 border border-slate-100 mt-2">
             <button 
               type="button"
@@ -147,25 +161,24 @@ export default function AddDevicePage() {
             </button>
           </div>
 
-          {/* Manual Entry Fields */}
           {isManual && (
             <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-              <InputField label="📍 LATITUDE" placeholder="19.0760" onChange={(v) => setFormData({...formData, latitude: v})} />
-              <InputField label="📍 LONGITUDE" placeholder="72.8777" onChange={(v) => setFormData({...formData, longitude: v})} />
+              <InputField label="📍 LATITUDE" placeholder="19.0760" value={formData.latitude} onChange={(v: string) => setFormData({...formData, latitude: v})} />
+              <InputField label="📍 LONGITUDE" placeholder="72.8777" value={formData.longitude} onChange={(v: string) => setFormData({...formData, longitude: v})} />
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4">
-            <InputField label="🏷️ MODEL" placeholder="Model No." onChange={(v) => setFormData({...formData, model: v})} />
-            <InputField label="🌐 IP ADDRESS" placeholder="192.168..." onChange={(v) => setFormData({...formData, ip_address: v})} />
+            <InputField label="🏷️ MODEL" placeholder="Model No." value={formData.model} onChange={(v: string) => setFormData({...formData, model: v})} />
+            <InputField label="🌐 IP ADDRESS" placeholder="192.168..." value={formData.ip_address} onChange={(v: string) => setFormData({...formData, ip_address: v})} />
           </div>
 
           <div className="bg-slate-50 p-6 rounded-[35px] border border-slate-100 space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <InputField label="👤 USER PASS" placeholder="****" onChange={(v) => setFormData({...formData, user_pass: v})} />
-              <InputField label="🔑 ADMIN PASS" placeholder="****" onChange={(v) => setFormData({...formData, admin_pass: v})} />
+              <InputField label="👤 USER PASS" placeholder="****" value={formData.user_pass} onChange={(v: string) => setFormData({...formData, user_pass: v})} />
+              <InputField label="🔑 ADMIN PASS" placeholder="****" value={formData.admin_pass} onChange={(v: string) => setFormData({...formData, admin_pass: v})} />
             </div>
-            <InputField label="🔐 V-CODE" placeholder="P2P Verification Code" onChange={(v) => setFormData({...formData, v_code: v})} />
+            <InputField label="🔐 V-CODE" placeholder="P2P Verification Code" value={formData.v_code} onChange={(v: string) => setFormData({...formData, v_code: v})} />
           </div>
 
           <div className="text-left font-bold pb-2">
@@ -173,6 +186,7 @@ export default function AddDevicePage() {
             <textarea 
               className="w-full p-5 mt-2 bg-[#f8fafc] border-2 border-slate-50 rounded-[25px] outline-none text-[14px] font-semibold text-slate-700 min-h-[100px] focus:border-blue-200 transition-all"
               placeholder="Ex: HDD 2TB, 4CH DVR, Power backup issues..." 
+              value={formData.device_notes}
               onChange={(e) => setFormData({...formData, device_notes: e.target.value})} 
             />
           </div>
@@ -198,7 +212,16 @@ export default function AddDevicePage() {
   );
 }
 
-function InputField({ label, placeholder, onChange, value, highlight = false }: any) {
+// ✅ Sub-component with Explicit Types
+interface InputProps {
+  label: string;
+  placeholder: string;
+  onChange: (value: string) => void;
+  value: string;
+  highlight?: boolean;
+}
+
+function InputField({ label, placeholder, onChange, value, highlight = false }: InputProps) {
   return (
     <div className="w-full text-left font-bold">
       <label className="text-[10px] text-slate-400 uppercase ml-4 tracking-widest leading-none">{label}</label>

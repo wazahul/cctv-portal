@@ -3,23 +3,29 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { X, MessageCircle, ShieldCheck, Loader2, BellRing, Hash, MessageSquare } from "lucide-react";
 
-// --- COMPONENT 1: The Blinking Bell Notification (For Card) ---
+// --- 🔔 COMPONENT 1: Card Bell (Clean & Minimal) ---
 export function RequestNotification({ deviceSn, pendingRequests, onClick }: { deviceSn: string, pendingRequests: any[], onClick: () => void }) {
   const hasRequest = pendingRequests.some(r => r.device_sn === deviceSn);
   if (!hasRequest) return null;
 
   return (
-    <button onClick={(e) => { e.stopPropagation(); onClick(); }} className="absolute left-4 top-4 bg-red-500 text-white p-2 rounded-2xl shadow-lg shadow-red-200 animate-bounce z-[20]">
-      <BellRing size={18} className="animate-pulse" />
-      <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
+    <button 
+      onClick={(e) => { e.stopPropagation(); onClick(); }} 
+      className="absolute left-5 top-5 text-red-600 hover:scale-110 active:scale-90 transition-transform z-[20] p-1"
+    >
+      {/* Sirf Pulse rakha hai, Bounce Delete kar diya hai */}
+      <BellRing size={22} className="animate-pulse" />
+      
+      {/* Tiny Status Dot */}
+      <span className="absolute top-0 right-0 flex h-2.5 w-2.5">
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-600 border border-white"></span>
+        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-600 border border-white"></span>
       </span>
     </button>
   );
 }
 
-// --- COMPONENT 2: The Main Manager Modal ---
+// --- 🛡️ COMPONENT 2: Main Manager Modal ---
 export default function RequestManagerModal({ isOpen, onClose, onRefresh, filterSn }: { isOpen: boolean, onClose: () => void, onRefresh: () => void, filterSn?: string | null }) {
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,15 +34,26 @@ export default function RequestManagerModal({ isOpen, onClose, onRefresh, filter
 
   const fetchRequests = async () => {
     setLoading(true);
-    let query = supabase.from("requests").select("*").eq("status", "pending");
-    if (filterSn) query = query.eq("device_sn", filterSn);
-    const { data: reqData } = await query.order("created_at", { ascending: false });
+    try {
+      let query = supabase.from("requests").select("*").eq("status", "pending");
+      if (filterSn) query = query.eq("device_sn", filterSn);
+      const { data: reqData } = await query.order("created_at", { ascending: false });
 
-    if (reqData?.length) {
-      const { data: devData } = await supabase.from("devices").select("device_sn, user_name, user_pass").in("device_sn", reqData.map(r => r.device_sn));
-      setRequests(reqData.map(req => ({ ...req, deviceDetails: devData?.find(d => d.device_sn === req.device_sn) })));
-    } else setRequests([]);
-    setLoading(false);
+      if (reqData?.length) {
+        const { data: devData } = await supabase
+          .from("devices")
+          .select("device_sn, user_name, user_pass")
+          .in("device_sn", reqData.map(r => r.device_sn));
+
+        setRequests(reqData.map(req => ({ 
+          ...req, 
+          deviceDetails: devData?.find(d => d.device_sn === req.device_sn) 
+        })));
+      } else {
+        setRequests([]);
+      }
+    } catch (err) { console.error(err); } 
+    finally { setLoading(false); }
   };
 
   const generatePortalId = (sn: string) => {
@@ -61,55 +78,59 @@ export default function RequestManagerModal({ isOpen, onClose, onRefresh, filter
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4 animate-in fade-in">
-      <div className="w-full max-w-2xl bg-white rounded-[40px] shadow-2xl overflow-hidden border border-white">
-        <div className="p-6 border-b flex justify-between items-center bg-red-50/50">
-          <h2 className="text-xl font-black text-red-600 uppercase italic flex items-center gap-2"><ShieldCheck size={22} /> Tasks</h2>
-          <button onClick={onClose} className="p-2 bg-white rounded-full text-red-500 shadow-sm"><X size={20} /></button>
+    <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-slate-900/80 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in">
+      <div className="w-full max-w-2xl bg-white rounded-t-[40px] sm:rounded-[40px] shadow-2xl overflow-hidden border-t sm:border border-white animate-in slide-in-from-bottom duration-300">
+        
+        <div className="p-6 border-b flex justify-between items-center bg-slate-50">
+          <h2 className="text-lg font-black text-slate-900 uppercase italic flex items-center gap-2">
+            <ShieldCheck className="text-blue-600" size={22} /> Tasks Manager
+          </h2>
+          <button onClick={onClose} className="p-2.5 bg-white rounded-full text-slate-400 shadow-sm active:scale-90 border">
+            <X size={20} />
+          </button>
         </div>
 
-        <div className="p-4 max-h-[60vh] overflow-y-auto space-y-3 bg-slate-50/30">
+        <div className="p-4 max-h-[70vh] overflow-y-auto space-y-4 bg-slate-50/50 pb-10">
           {loading ? (
             <div className="flex justify-center py-10"><Loader2 className="animate-spin text-blue-600" size={32}/></div>
-          ) : requests.map(req => (
-            <div key={req.id} className="p-4 rounded-[25px] border border-slate-100 bg-white flex flex-col gap-3 hover:shadow-lg transition-all">
-              
-              {/* Header Line */}
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-sm font-black text-slate-800 uppercase italic truncate">{req.site_name}</h3>
-                <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
-                   <Hash size={10} className="text-slate-400" />
-                   <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">SN: {req.device_sn}</span>
-                </div>
-              </div>
-
-              {/* User Message Sticker */}
-              {req.message && (
-                <div className="flex items-start gap-2 bg-yellow-50 p-3 rounded-2xl border-l-4 border-l-yellow-400 border border-yellow-100">
-                  <MessageSquare size={14} className="text-yellow-600 mt-0.5" />
-                  <p className="text-[11px] font-bold text-yellow-800 leading-tight italic">"{req.message}"</p>
-                </div>
-              )}
-
-              {/* Footer Line */}
-              <div className="flex items-center justify-between border-t border-slate-50 pt-3">
-                <div className="flex items-center gap-3">
-                   <div className="flex flex-col">
-                     <span className="text-[8px] font-black text-blue-500 uppercase">Portal ID</span>
-                     <span className="text-[11px] font-bold text-slate-700">{generatePortalId(req.device_sn)}</span>
-                   </div>
-                   <div className="w-[1px] h-6 bg-slate-100 border-l ml-2"></div>
-                   <div className="flex flex-col ml-1">
-                     <span className="text-[8px] font-black text-slate-400 uppercase">WA</span>
-                     <span className="text-[11px] font-bold text-slate-700">{req.mobile}</span>
-                   </div>
-                </div>
-                <button onClick={() => handleAction(req)} className="bg-green-600 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 text-[10px] font-black uppercase shadow-lg active:scale-95 transition-all">
-                  <MessageCircle size={14}/> Send & Done
-                </button>
-              </div>
+          ) : requests.length === 0 ? (
+            <div className="text-center py-10">
+              <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">No pending tasks</p>
             </div>
-          ))}
+          ) : (
+            requests.map(req => (
+              <div key={req.id} className="p-5 rounded-[30px] border border-slate-200 bg-white flex flex-col gap-4 shadow-sm active:border-blue-200 transition-all">
+                
+                <div className="flex items-start justify-between">
+                  <h3 className="text-base font-[1000] text-slate-900 uppercase italic leading-tight pr-4">{req.site_name}</h3>
+                  <span className="text-[9px] font-black text-slate-500 bg-slate-100 px-2 py-1 rounded-lg border uppercase whitespace-nowrap">SN: {req.device_sn}</span>
+                </div>
+
+                {req.message && (
+                  <div className="flex items-start gap-3 bg-yellow-50 p-4 rounded-2xl border border-yellow-100">
+                    <MessageSquare size={16} className="text-yellow-600 shrink-0 mt-0.5" />
+                    <p className="text-xs font-bold text-yellow-900 leading-snug italic">"{req.message}"</p>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-100">
+                  <div className="flex items-center gap-4">
+                    <div className="flex flex-col">
+                      <span className="text-[8px] font-black text-blue-500 uppercase">Portal ID</span>
+                      <span className="text-xs font-bold text-slate-800">{generatePortalId(req.device_sn)}</span>
+                    </div>
+                    <div className="flex flex-col border-l pl-4">
+                      <span className="text-[8px] font-black text-slate-400 uppercase">WhatsApp</span>
+                      <span className="text-xs font-bold text-slate-800">{req.mobile}</span>
+                    </div>
+                  </div>
+                  <button onClick={() => handleAction(req)} className="w-full sm:w-auto bg-green-600 text-white px-6 py-3.5 rounded-2xl flex items-center justify-center gap-2 text-xs font-black uppercase shadow-lg shadow-green-100 active:scale-95">
+                    <MessageCircle size={18}/> Send & Complete
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

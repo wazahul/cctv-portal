@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 
 interface AuthGuardProps {
   children: React.ReactNode;
-  allowedRoles?: string[]; // 👈 Ye interface Vercel build error ko fix karega
+  allowedRoles?: string[]; 
 }
 
 export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
@@ -15,45 +15,53 @@ export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
 
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        // 🚫 Agar session nahi hai, seedha login par bhejo
-        router.replace("/login");
-        return;
-      }
-
-      // 🔐 Role-based access check
-      if (allowedRoles && allowedRoles.length > 0) {
-        const userRole = session.user.user_metadata?.role; // Supabase user metadata se role nikaalna
+      try {
+        // getSession() session check karta hai aur agar zaroorat ho toh refresh bhi karta hai
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (!allowedRoles.includes(userRole)) {
-          // 🚫 Agar role match nahi karta, unauthorized page ya home par bhejo
-          alert("Access Denied: You don't have permission to view this page.");
-          router.replace("/"); 
+        if (error || !session) {
+          // Agar refresh token invalid ho ya session na mile, toh seedha login par
+          console.warn("Session error or expired:", error?.message);
+          router.replace("/login");
           return;
         }
-      }
 
-      // ✅ Sab sahi hai, access allow karo
-      setAuthorized(true);
+        // 🔐 Role-based access check
+        if (allowedRoles && allowedRoles.length > 0) {
+          const userRole = session.user.user_metadata?.role;
+          
+          if (!allowedRoles.includes(userRole)) {
+            alert("Access Denied: You don't have permission to view this page.");
+            router.replace("/"); 
+            return;
+          }
+        }
+
+        // ✅ Agar sab sahi hai, toh access de do
+        setAuthorized(true);
+
+      } catch (err) {
+        console.error("Auth check failed:", err);
+        router.replace("/login");
+      }
     };
 
     checkUser();
   }, [router, allowedRoles]);
 
-  // Jab tak check ho raha hai, ya unauthorized hai, Loading spinner dikhao
+  // Jab tak verification ho raha hai, loading dikhao
   if (!authorized) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-4">
-        <Loader2 className="animate-spin text-blue-600" size={50} />
-        <p className="font-black text-slate-400 text-[10px] uppercase tracking-[5px]">
-          Verifying Access...
-        </p>
+        <div className="text-center">
+          <Loader2 className="animate-spin text-blue-600 mx-auto mb-4" size={50} />
+          <p className="font-black text-slate-400 text-[10px] uppercase tracking-[5px]">
+            Verifying Access...
+          </p>
+        </div>
       </div>
     );
   }
 
-  // Agar authorized hai, toh page ka content dikhao
   return <>{children}</>;
 }

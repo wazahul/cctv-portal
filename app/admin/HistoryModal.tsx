@@ -189,7 +189,15 @@ export default function HistoryModal({ isOpen, onClose, sn, siteName }: HistoryM
         </div>
       </div>
 
-      <MasterDialog isOpen={dialog.isOpen} onClose={() => setDialog(prev => ({ ...prev, isOpen: false }))} title={dialog.title} message={dialog.message} type={dialog.type} />
+      {/* 🛡️ FIXED MASTER DIALOG (Added onConfirm to satisfy TypeScript) */}
+      <MasterDialog 
+        isOpen={dialog.isOpen} 
+        onClose={() => setDialog(prev => ({ ...prev, isOpen: false }))} 
+        onConfirm={() => setDialog(prev => ({ ...prev, isOpen: false }))} 
+        title={dialog.title} 
+        message={dialog.message} 
+        type={dialog.type} 
+      />
     </>
   );
 }

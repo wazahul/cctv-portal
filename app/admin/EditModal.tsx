@@ -36,18 +36,21 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
   const [showPass, setShowPass] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
 
-  // 🛡️ Logic: Prevent background scroll and trigger mobile bar hide
+  // 🛡️ CRITICAL FIX: Browser bar hide karne ke liye Body scroll lock zaroori hai
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
-      document.body.style.height = "100%";
+      document.body.style.position = "fixed"; // iOS Safari fix
+      document.body.style.width = "100%";
     } else {
-      document.body.style.overflow = "unset";
-      document.body.style.height = "unset";
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
     }
     return () => {
-      document.body.style.overflow = "unset";
-      document.body.style.height = "unset";
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
     };
   }, [isOpen]);
 
@@ -77,9 +80,10 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
   };
 
   return (
+    // 🚩 Viewport Fix: h-[100dvh] browser bars ko responsive banata hai
     <div className="fixed inset-0 z-[2000] bg-slate-900/70 backdrop-blur-md flex items-start justify-center overflow-hidden touch-none">
       
-      {/* 📱 Full Screen Container: Using dvh for mobile bar auto-hide support */}
+      {/* 📱 Full Screen Container */}
       <div className="bg-white w-full max-w-2xl h-[100dvh] sm:h-[92vh] sm:mt-6 sm:rounded-[45px] shadow-2xl flex flex-col animate-in slide-in-from-bottom-10 duration-500 overflow-hidden touch-auto">
         
         {/* --- 🏗️ HEADER (Icon BG Removed) --- */}
@@ -90,7 +94,7 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
             </div>
             <div>
               <h3 className="text-[20px] font-[1000] italic tracking-tighter text-slate-900 uppercase leading-none">Terminal Config</h3>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[3px] mt-2 leading-none italic">Modern Admin Central</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[3px] mt-2 leading-none italic uppercase">Modern Admin Central</p>
             </div>
           </div>
           <button onClick={onClose} className="p-3 bg-slate-50 rounded-2xl text-slate-300 active:scale-90 transition-all border border-slate-100 shadow-sm">
@@ -98,8 +102,9 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
           </button>
         </div>
 
-        {/* --- 📝 SCROLLABLE BODY (Triggers Browser UI Hide) --- */}
-        <div className="flex-1 overflow-y-auto px-6 sm:px-10 space-y-8 pt-8 pb-32 text-left custom-scroll touch-pan-y">
+        {/* --- 📝 SCROLLABLE BODY (Browser UI trigger) --- */}
+        {/* touch-pan-y aur Overscroll behavior browser ko signal deta hai bar hide karne ke liye */}
+        <div className="flex-1 overflow-y-auto px-6 sm:px-10 space-y-8 pt-8 pb-32 text-left custom-scroll touch-pan-y overscroll-contain">
           
           {/* Identity Section */}
           <div className="space-y-3">
@@ -113,7 +118,7 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <InputField label="Site Name" icon={<Monitor size={12}/>} value={device.site_name} onChange={(v: string) => handleChange('site_name', v)} />
-            <div className="space-y-2.5">
+            <div className="space-y-2.5 text-left">
               <label className="text-[10px] font-black uppercase text-slate-400 ml-2 tracking-widest leading-none">Category</label>
               <select 
                 value={device.category} 
@@ -133,7 +138,7 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
           {/* --- 🔐 ACCESS CREDENTIALS (Sky Blue Theme) --- */}
           <div className="bg-blue-50/50 p-6 rounded-[35px] border border-blue-100 space-y-6 relative overflow-hidden">
             <div className="flex justify-between items-center relative z-10">
-              <label className="text-[11px] font-black uppercase text-blue-600 flex items-center gap-2 tracking-widest leading-none">
+              <label className="text-[11px] font-black uppercase text-blue-600 flex items-center gap-2 tracking-widest leading-none uppercase">
                 <ShieldCheck size={18} strokeWidth={2.5} /> Security Keys
               </label>
               <button type="button" onClick={() => setShowPass(!showPass)} className="p-2.5 bg-white rounded-xl text-blue-500 shadow-sm border border-blue-100 active:scale-95">
@@ -147,14 +152,13 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
               <InputField label="Admin Name" value={device.admin_name} onChange={(v: string) => handleChange('admin_name', v)} light />
               <InputField label="Admin Password" type={showPass ? "text" : "password"} value={device.admin_pass} onChange={(v: string) => handleChange('admin_pass', v)} light />
             </div>
-
-            <InputField label="Verification Code (V-Code)" type={showPass ? "text" : "password"} value={device.v_code} onChange={(v: string) => handleChange('v_code', v)} light />
+            <InputField label="V-Code" type={showPass ? "text" : "password"} value={device.v_code} onChange={(v: string) => handleChange('v_code', v)} light />
           </div>
 
           {/* GPS Section */}
           <div className="space-y-5">
             <div className="flex justify-between items-center px-2">
-              <label className="text-[11px] font-black uppercase text-slate-400 flex items-center gap-2 tracking-widest leading-none">
+              <label className="text-[11px] font-black uppercase text-slate-400 flex items-center gap-2 tracking-widest leading-none uppercase">
                 <MapPin size={16} className="text-red-500" /> GPS Geofencing
               </label>
               <button 
@@ -163,13 +167,13 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
                 disabled={isLocating} 
                 className="text-[10px] font-black bg-slate-900 text-white px-5 py-3 rounded-xl active:scale-95 flex items-center gap-2 shadow-lg transition-all"
               >
-                {isLocating ? <Loader2 size={14} className="animate-spin" /> : <Navigation size={14} />} FETCH GPS
+                {isLocating ? <Loader2 size={14} className="animate-spin" /> : <Navigation size={14} />} SYNC GPS
               </button>
             </div>
             <div className="grid grid-cols-3 gap-3">
                {['latitude', 'longitude', 'radius'].map((key) => (
                  <div key={key} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 shadow-inner">
-                   <label className="text-[8px] font-black uppercase text-slate-400 text-center block mb-1 leading-none">{key.slice(0,3)}</label>
+                   <label className="text-[8px] font-black uppercase text-slate-400 text-center block mb-1 leading-none uppercase">{key.slice(0,3)}</label>
                    <input 
                     value={device[key as keyof DeviceData]} 
                     onChange={e => handleChange(key as keyof DeviceData, e.target.value)} 
@@ -180,44 +184,44 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
             </div>
           </div>
 
-          {/* Maintenance Section */}
+          {/* Remarks Section */}
           <div className="space-y-3">
-            <label className="text-[11px] font-black uppercase text-slate-400 ml-4 tracking-widest flex items-center gap-2 leading-none">
-              <Info size={16} className="text-slate-300" /> Maintenance Remarks
+            <label className="text-[11px] font-black uppercase text-slate-400 ml-4 tracking-widest flex items-center gap-2 leading-none uppercase">
+              <Info size={16} className="text-slate-300" /> Site Notes
             </label>
             <textarea 
               rows={3} 
               value={device.device_notes} 
               onChange={e => handleChange('device_notes', e.target.value)} 
               className="w-full p-5 bg-slate-50/50 border border-slate-100 rounded-[30px] font-bold text-sm outline-none focus:border-blue-400 shadow-inner resize-none" 
-              placeholder="Hardware specific notes..." 
+              placeholder="Hardware notes..." 
             />
           </div>
 
-          {/* --- 💾 ACTION BUTTONS (Natural flow, helps browser bar hide) --- */}
+          {/* --- 💾 ACTION BUTTONS --- */}
           <div className="pt-10 flex flex-col gap-3 pb-20">
             <button 
               onClick={onUpdate}
               disabled={isSaving}
-              className="w-full bg-blue-600 text-white py-5 rounded-[22px] font-black uppercase text-[15px] tracking-[3px] shadow-xl shadow-blue-100 flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 transition-all border-b-4 border-blue-800"
+              className="w-full bg-blue-600 text-white py-5 rounded-[22px] font-black uppercase text-[14px] tracking-[3px] shadow-xl shadow-blue-100 flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 transition-all border-b-4 border-blue-800"
             >
               {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18}/>} 
-              {isSaving ? "Syncing Configuration..." : "Sync Master Data"}
+              {isSaving ? "Syncing..." : "Sync Master Data"}
             </button>
-            <button onClick={onClose} className="w-full py-4 text-slate-400 font-black uppercase text-[12px] tracking-[2px] active:scale-95 transition-all">
+            <button onClick={onClose} className="w-full py-4 text-slate-400 font-black uppercase text-[12px] tracking-[2px] active:scale-95 transition-all uppercase">
               Discard Changes
             </button>
           </div>
           
-          {/* Bottom padding hack to ensure browser bar hides on full scroll */}
-          <div className="h-[2px] opacity-0">.</div>
+          {/* Scroll trigger hack: Ensures browser recognizes there is content to scroll */}
+          <div className="h-10 opacity-0 pointer-events-none">.</div>
         </div>
       </div>
     </div>
   );
 }
 
-// 🧰 Reusable Type-Safe InputField
+// 🧰 Sub-Component: InputField
 interface InputFieldProps {
   label: string;
   icon?: React.ReactNode;
@@ -230,7 +234,7 @@ interface InputFieldProps {
 function InputField({ label, icon, value, onChange, type = "text", light = false }: InputFieldProps) {
   return (
     <div className="space-y-2 text-left">
-      <label className="text-[10px] font-black uppercase text-slate-400 ml-2 tracking-widest flex items-center gap-1 leading-none">
+      <label className="text-[10px] font-black uppercase text-slate-400 ml-2 tracking-widest flex items-center gap-1 leading-none uppercase">
         {icon}{label}
       </label>
       <input 

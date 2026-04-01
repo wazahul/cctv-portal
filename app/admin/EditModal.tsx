@@ -1,11 +1,10 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   X, Save, ShieldCheck, MapPin, Info, 
   Eye, EyeOff, Navigation, Loader2, Database, Hash, Monitor, Cpu 
 } from "lucide-react";
 
-// 🚩 TYPES: Explicitly defined to fix Vercel Build Error
 interface DeviceData {
   device_sn: string;
   site_name: string;
@@ -21,7 +20,7 @@ interface DeviceData {
   longitude: string | number;
   radius: string | number;
   device_notes: string;
-  [key: string]: any; 
+  [key: string]: any;
 }
 
 interface EditModalProps {
@@ -37,11 +36,25 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
   const [showPass, setShowPass] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
 
+  // 🛡️ Logic: Prevent background scroll and trigger mobile bar hide
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+      document.body.style.height = "100%";
+    } else {
+      document.body.style.overflow = "unset";
+      document.body.style.height = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+      document.body.style.height = "unset";
+    };
+  }, [isOpen]);
+
   if (!isOpen || !device) return null;
 
-  // 🛠️ Type-Safe Change Handler
   const handleChange = (key: keyof DeviceData, value: string) => {
-    if (typeof setDevice === 'function') {
+    if (typeof setDevice === "function") {
       setDevice({ ...device, [key]: value });
     }
   };
@@ -54,7 +67,7 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
         setDevice({
           ...device,
           latitude: pos.coords.latitude.toFixed(6),
-          longitude: pos.coords.longitude.toFixed(6)
+          longitude: pos.coords.longitude.toFixed(6),
         });
         setIsLocating(false);
       },
@@ -64,20 +77,20 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
   };
 
   return (
-    <div className="fixed inset-0 z-[2000] bg-slate-900/60 backdrop-blur-sm flex items-start justify-center animate-in fade-in duration-300 overflow-hidden">
+    <div className="fixed inset-0 z-[2000] bg-slate-900/70 backdrop-blur-md flex items-start justify-center overflow-hidden touch-none">
       
-      {/* 📱 Full Screen Container: Optimized for browser bars auto-hide */}
-      <div className="bg-white w-full max-w-2xl h-full sm:h-[92vh] sm:mt-6 sm:rounded-[45px] shadow-2xl flex flex-col overflow-y-auto custom-scroll animate-in slide-in-from-bottom-10 duration-500">
+      {/* 📱 Full Screen Container: Using dvh for mobile bar auto-hide support */}
+      <div className="bg-white w-full max-w-2xl h-[100dvh] sm:h-[92vh] sm:mt-6 sm:rounded-[45px] shadow-2xl flex flex-col animate-in slide-in-from-bottom-10 duration-500 overflow-hidden touch-auto">
         
-        {/* --- 🏗️ HEADER --- */}
+        {/* --- 🏗️ HEADER (Icon BG Removed) --- */}
         <div className="p-6 flex justify-between items-center border-b border-slate-50 shrink-0">
           <div className="flex items-center gap-4 text-left">
             <div className="text-blue-600">
-               <Database size={28} strokeWidth={2.5} />
+               <Database size={30} strokeWidth={2.5} />
             </div>
             <div>
               <h3 className="text-[20px] font-[1000] italic tracking-tighter text-slate-900 uppercase leading-none">Terminal Config</h3>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[3px] mt-1.5 leading-none">Modern Admin Central</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[3px] mt-2 leading-none italic">Modern Admin Central</p>
             </div>
           </div>
           <button onClick={onClose} className="p-3 bg-slate-50 rounded-2xl text-slate-300 active:scale-90 transition-all border border-slate-100 shadow-sm">
@@ -85,8 +98,8 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
           </button>
         </div>
 
-        {/* --- 📝 BODY --- */}
-        <div className="p-6 sm:p-10 space-y-8 text-left pb-32">
+        {/* --- 📝 SCROLLABLE BODY (Triggers Browser UI Hide) --- */}
+        <div className="flex-1 overflow-y-auto px-6 sm:px-10 space-y-8 pt-8 pb-32 text-left custom-scroll touch-pan-y">
           
           {/* Identity Section */}
           <div className="space-y-3">
@@ -107,13 +120,13 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
                 onChange={e => handleChange('category', e.target.value)} 
                 className="w-full p-4 bg-white border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none appearance-none cursor-pointer"
               >
-                <option value="DVR (Analog)">📹 DVR</option>
-                <option value="NVR (IP)">🖥️ NVR</option>
-                <option value="IP Camera">👁️ IP Cam</option>
-                <option value="Biometric">☝️ Bio</option>
+                <option value="DVR (Analog)">📹 DVR (Analog)</option>
+                <option value="NVR (IP)">🖥️ NVR (IP)</option>
+                <option value="IP Camera">👁️ IP Camera</option>
+                <option value="Biometric">☝️ Biometric</option>
               </select>
             </div>
-            <InputField label="Model No" icon={<Cpu size={12}/>} value={device.model} onChange={(v: string) => handleChange('model', v)} />
+            <InputField label="Model Number" icon={<Cpu size={12}/>} value={device.model} onChange={(v: string) => handleChange('model', v)} />
             <InputField label="Static IP / URL" icon={<Monitor size={12}/>} value={device.ip_address} onChange={(v: string) => handleChange('ip_address', v)} />
           </div>
 
@@ -130,9 +143,9 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
             
             <div className="grid grid-cols-2 gap-4 relative z-10">
               <InputField label="User Name" value={device.user_name} onChange={(v: string) => handleChange('user_name', v)} light />
-              <InputField label="User Pass" type={showPass ? "text" : "password"} value={device.user_pass} onChange={(v: string) => handleChange('user_pass', v)} light />
+              <InputField label="User Password" type={showPass ? "text" : "password"} value={device.user_pass} onChange={(v: string) => handleChange('user_pass', v)} light />
               <InputField label="Admin Name" value={device.admin_name} onChange={(v: string) => handleChange('admin_name', v)} light />
-              <InputField label="Admin Pass" type={showPass ? "text" : "password"} value={device.admin_pass} onChange={(v: string) => handleChange('admin_pass', v)} light />
+              <InputField label="Admin Password" type={showPass ? "text" : "password"} value={device.admin_pass} onChange={(v: string) => handleChange('admin_pass', v)} light />
             </div>
 
             <InputField label="Verification Code (V-Code)" type={showPass ? "text" : "password"} value={device.v_code} onChange={(v: string) => handleChange('v_code', v)} light />
@@ -148,9 +161,9 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
                 type="button" 
                 onClick={handleGetLocation} 
                 disabled={isLocating} 
-                className="text-[10px] font-black bg-slate-900 text-white px-5 py-2.5 rounded-xl active:scale-95 flex items-center gap-2 transition-all shadow-lg"
+                className="text-[10px] font-black bg-slate-900 text-white px-5 py-3 rounded-xl active:scale-95 flex items-center gap-2 shadow-lg transition-all"
               >
-                {isLocating ? <Loader2 size={14} className="animate-spin" /> : <Navigation size={14} />} SYNC GPS
+                {isLocating ? <Loader2 size={14} className="animate-spin" /> : <Navigation size={14} />} FETCH GPS
               </button>
             </div>
             <div className="grid grid-cols-3 gap-3">
@@ -176,33 +189,35 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
               rows={3} 
               value={device.device_notes} 
               onChange={e => handleChange('device_notes', e.target.value)} 
-              className="w-full p-5 bg-slate-50/50 border border-slate-100 rounded-[25px] font-bold text-sm outline-none focus:border-blue-400 shadow-inner resize-none" 
+              className="w-full p-5 bg-slate-50/50 border border-slate-100 rounded-[30px] font-bold text-sm outline-none focus:border-blue-400 shadow-inner resize-none" 
               placeholder="Hardware specific notes..." 
             />
           </div>
 
-          {/* --- 💾 ACTION BUTTONS --- */}
-          <div className="pt-6 flex flex-col gap-3 pb-20">
+          {/* --- 💾 ACTION BUTTONS (Natural flow, helps browser bar hide) --- */}
+          <div className="pt-10 flex flex-col gap-3 pb-20">
             <button 
               onClick={onUpdate}
               disabled={isSaving}
-              className="w-full bg-blue-600 text-white py-5 rounded-[22px] font-black uppercase text-[14px] tracking-[2px] shadow-xl shadow-blue-100 flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 transition-all"
+              className="w-full bg-blue-600 text-white py-5 rounded-[22px] font-black uppercase text-[15px] tracking-[3px] shadow-xl shadow-blue-100 flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 transition-all border-b-4 border-blue-800"
             >
               {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18}/>} 
-              {isSaving ? "Syncing..." : "Sync Master Data"}
+              {isSaving ? "Syncing Configuration..." : "Sync Master Data"}
             </button>
-            <button onClick={onClose} className="w-full py-4 text-slate-400 font-black uppercase text-[11px] tracking-[2px] active:scale-95 transition-all">
+            <button onClick={onClose} className="w-full py-4 text-slate-400 font-black uppercase text-[12px] tracking-[2px] active:scale-95 transition-all">
               Discard Changes
             </button>
           </div>
-
+          
+          {/* Bottom padding hack to ensure browser bar hides on full scroll */}
+          <div className="h-[2px] opacity-0">.</div>
         </div>
       </div>
     </div>
   );
 }
 
-// 🧰 Sub-Component: InputField (Type-Safe)
+// 🧰 Reusable Type-Safe InputField
 interface InputFieldProps {
   label: string;
   icon?: React.ReactNode;
@@ -215,7 +230,7 @@ interface InputFieldProps {
 function InputField({ label, icon, value, onChange, type = "text", light = false }: InputFieldProps) {
   return (
     <div className="space-y-2 text-left">
-      <label className="text-[9px] font-black uppercase text-slate-400 ml-2 tracking-widest flex items-center gap-1 leading-none">
+      <label className="text-[10px] font-black uppercase text-slate-400 ml-2 tracking-widest flex items-center gap-1 leading-none">
         {icon}{label}
       </label>
       <input 

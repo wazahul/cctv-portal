@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { 
   X, Save, ShieldCheck, MapPin, Info, 
-  Eye, EyeOff, Navigation, Loader2, Database, Hash, Monitor, Cpu, User, Lock
+  Eye, EyeOff, Navigation, Loader2, Database, Hash, Cpu 
 } from "lucide-react";
 
 interface DeviceData {
@@ -22,10 +22,10 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
   const [showPass, setShowPass] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
 
-  // 🛡️ BROWSER AUTO-HIDE LOGIC
+  // 🛡️ RULE 1: BROWSER BAR SYNC & SCROLL LOCK
   useEffect(() => {
     if (isOpen) {
-      // Background ko scroll se rokna hai par browser interaction allow karni hai
+      // Body lock but allowing interaction for browser bar triggers
       document.body.style.overflow = 'hidden';
       document.documentElement.style.scrollBehavior = 'smooth';
     } else {
@@ -55,12 +55,13 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
   };
 
   return (
+    // 🚩 ROOT: Fixed background with high blur
     <div className="fixed inset-0 z-[10000] bg-slate-900/90 backdrop-blur-md flex items-stretch sm:items-center justify-center p-0 animate-in fade-in duration-300">
       
-      {/* 📱 100dvh + OVERSCROLL: Isse browser bar scroll hone par hide honge */}
-      <div className="bg-[#f8fafc] w-full max-w-2xl h-[100dvh] sm:h-auto sm:max-h-[92vh] sm:rounded-[50px] shadow-2xl flex flex-col overflow-hidden relative animate-in slide-in-from-bottom duration-500">
+      {/* 📱 1. SHELL: Using 100dvh to stay synced with mobile address bar movements */}
+      <div className="bg-[#f8fafc] w-full max-w-2xl h-[100dvh] sm:h-auto sm:max-h-[92vh] sm:rounded-[50px] shadow-2xl flex flex-col overflow-hidden relative animate-in slide-in-from-bottom duration-500 border-t border-white/20">
         
-        {/* --- 🏗️ HEADER (Sticky) --- */}
+        {/* --- 🏗️ 2. HEADER: Sticky & Blurred (Handles safe-area-inset for iOS) --- */}
         <div className="sticky top-0 z-[100] bg-white/90 backdrop-blur-xl border-b border-slate-200/50 p-5 flex justify-between items-center shrink-0 pt-[calc(env(safe-area-inset-top)+1rem)]">
           <div className="flex items-center gap-4 italic text-left">
             <div className="bg-blue-600 p-3 rounded-2xl text-white shadow-xl shadow-blue-100/50">
@@ -71,33 +72,37 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
               <p className="text-[10px] font-black text-blue-500 uppercase tracking-[3px] mt-1.5 leading-none italic">Configuration v3.5</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-4 bg-slate-50 rounded-[20px] text-slate-400 active:scale-90 border border-slate-100 shadow-sm transition-all">
+          <button 
+            onClick={onClose} 
+            className="p-4 bg-slate-50 rounded-[20px] text-slate-400 active:scale-[0.90] border border-slate-100 transition-all shadow-sm"
+          >
             <X size={24} strokeWidth={3} />
           </button>
         </div>
 
-        {/* --- 📝 BODY (Natural Scroll) --- */}
-        {/* touch-pan-y aur overscroll-auto browser ko bars hide karne par majboor karte hain */}
+        {/* --- 📝 3. BODY (Natural Momentum Scroll) --- */}
+        {/* 'overscroll-auto' aur 'touch-pan-y' browser ko Address Bar hide karne ka signal dete hain */}
         <div className="flex-1 overflow-y-auto px-6 sm:px-10 space-y-10 pt-8 pb-60 text-left overscroll-auto touch-pan-y custom-scroll bg-[#f8fafc]">
           
-          {/* Device identity */}
+          {/* Identity Card */}
           <div className="space-y-3">
              <label className="text-[10px] font-[1000] uppercase text-slate-400 ml-1 tracking-[4px] leading-none italic uppercase">
                <Hash size={14} className="text-blue-500" /> Device SN
              </label>
-             <div className="p-8 bg-white border-2 border-slate-100 border-dashed rounded-[35px] font-mono font-black text-slate-500 text-sm text-center shadow-inner italic">
+             <div className="p-8 bg-white border-2 border-slate-100 border-dashed rounded-[35px] font-mono font-black text-slate-500 text-sm text-center shadow-inner italic break-all select-all">
                {device.device_sn}
              </div>
           </div>
 
-          {/* Site Inputs */}
+          {/* Form Fields Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-7">
             <InputField label="Site Name" icon="🏢" value={device.site_name} onChange={(v:any) => handleChange('site_name', v)} />
+            
             <div className="space-y-3">
               <label className="text-[10px] font-[1000] uppercase text-slate-400 ml-4 tracking-widest leading-none uppercase italic text-left block">Category</label>
               <select 
                 value={device.category} 
-                onChange={e => handleChange('category', e.target.value)} 
+                onChange={e => handleChange('category' as any, e.target.value)} 
                 className="w-full p-5 bg-white border-2 border-slate-100 rounded-[25px] font-[1000] italic text-slate-800 text-sm outline-none appearance-none cursor-pointer focus:border-blue-500 shadow-sm transition-all"
               >
                 <option value="DVR (Analog)">📹 DVR (Analog)</option>
@@ -106,17 +111,22 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
                 <option value="Biometric">☝️ Biometric</option>
               </select>
             </div>
+
             <InputField label="Model No." icon="🏷️" value={device.model} onChange={(v:any) => handleChange('model', v)} />
             <InputField label="Network IP" icon="🌐" value={device.ip_address} onChange={(v:any) => handleChange('ip_address', v)} />
           </div>
 
-          {/* Security Credentials */}
+          {/* 🔐 4. Security Credentials Card */}
           <div className="bg-white p-8 rounded-[45px] border border-slate-100 shadow-xl space-y-8 relative overflow-hidden">
             <div className="flex justify-between items-center relative z-10 px-1">
               <label className="text-[11px] font-[1000] uppercase text-slate-900 flex items-center gap-2 tracking-[2px] font-black italic uppercase">
                 <ShieldCheck size={20} className="text-blue-600" /> Security Access
               </label>
-              <button type="button" onClick={() => setShowPass(!showPass)} className="p-3 bg-slate-50 rounded-2xl text-blue-500 border border-blue-100 active:scale-95 transition-all shadow-sm">
+              <button 
+                type="button" 
+                onClick={() => setShowPass(!showPass)} 
+                className="p-3 bg-slate-50 rounded-2xl text-blue-500 border border-blue-100 active:scale-95 transition-all shadow-sm"
+              >
                 {showPass ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
@@ -126,16 +136,21 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
               <InputField label="Admin Name" icon="🛠️" value={device.admin_name} onChange={(v:any) => handleChange('admin_name', v)} light />
               <InputField label="Admin Pass" icon="🔒" type={showPass ? "text" : "password"} value={device.admin_pass} onChange={(v:any) => handleChange('admin_pass', v)} light />
             </div>
-            <InputField label="V-Code (Verification)" icon="🛡️" type={showPass ? "text" : "password"} value={device.v_code} onChange={(v:any) => handleChange('v_code', v)} light />
+            <InputField label="V-Code (Verification)" icon="🛡️" type={showPass ? "text" : "password"} value={device.v_code} onChange={(v:any) => handleChange('v_code' as any, v)} light />
           </div>
 
-          {/* GPS Section */}
+          {/* 📍 5. GPS Section */}
           <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-xl space-y-6">
             <div className="flex justify-between items-center px-1">
               <label className="text-[11px] font-[1000] uppercase text-slate-900 flex items-center gap-2 tracking-widest leading-none font-black italic uppercase">
                 <MapPin size={20} className="text-red-500" /> GPS Geofence
               </label>
-              <button type="button" onClick={handleGetLocation} disabled={isLocating} className="text-[10px] font-black bg-slate-900 text-white px-6 py-4 rounded-[20px] active:scale-95 shadow-lg flex items-center gap-2 transition-all">
+              <button 
+                type="button" 
+                onClick={handleGetLocation} 
+                disabled={isLocating} 
+                className="text-[10px] font-black bg-slate-900 text-white px-6 py-4 rounded-[20px] active:scale-95 shadow-lg flex items-center gap-2 transition-all"
+              >
                 {isLocating ? <Loader2 size={14} className="animate-spin" /> : <Navigation size={14} />} FETCH GPS
               </button>
             </div>
@@ -143,22 +158,31 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
                {['latitude', 'longitude', 'radius'].map((key) => (
                  <div key={key} className="p-5 rounded-[28px] bg-slate-50 border border-slate-100 shadow-inner text-center">
                    <label className="text-[9px] font-[1000] uppercase text-slate-400 block mb-1 leading-none uppercase italic">{key.slice(0,3)}</label>
-                   <input value={device[key] || ""} onChange={e => handleChange(key as any, e.target.value)} className="w-full bg-transparent text-center font-black text-sm text-slate-800 outline-none" />
+                   <input 
+                    value={device[key] || ""} 
+                    onChange={e => handleChange(key as any, e.target.value)} 
+                    className="w-full bg-transparent text-center font-black text-sm text-slate-800 outline-none" 
+                   />
                  </div>
                ))}
             </div>
           </div>
 
-          {/* Remarks */}
+          {/* 📝 6. Remarks */}
           <div className="space-y-4">
             <label className="text-[10px] font-[1000] uppercase text-slate-400 ml-5 tracking-widest flex items-center gap-2 leading-none uppercase italic text-left block">
               <Info size={18} className="text-slate-300" /> Technical Remarks
             </label>
-            <textarea rows={4} value={device.device_notes || ""} onChange={e => handleChange('device_notes', e.target.value)} className="w-full p-7 bg-white border-2 border-slate-100 rounded-[40px] font-[1000] italic text-sm outline-none focus:border-blue-500 shadow-inner resize-none transition-all shadow-slate-100" />
+            <textarea 
+              rows={4} 
+              value={device.device_notes || ""} 
+              onChange={e => handleChange('device_notes' as any, e.target.value)} 
+              className="w-full p-7 bg-white border-2 border-slate-100 rounded-[40px] font-[1000] italic text-sm outline-none focus:border-blue-500 shadow-inner resize-none transition-all shadow-slate-100" 
+            />
           </div>
 
-          {/* 🚩 FINAL BUTTON: Non-Sticky, At the very end of content */}
-          <div className="pt-10 pb-40 relative z-[150]">
+          {/* 🚩 7. FINAL BUTTON (Non-Sticky, at the very end) */}
+          <div className="pt-10 pb-40 relative z-[150] min-h-[110%]">
             <button 
               type="button"
               onClick={(e) => { e.preventDefault(); onUpdate(); }} 
@@ -176,6 +200,7 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
   );
 }
 
+// 🧰 Sub-Component: InputField
 function InputField({ label, icon, value, onChange, type = "text", light = false }: any) {
   return (
     <div className="space-y-3 text-left">

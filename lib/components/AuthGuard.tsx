@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { Loader2, ShieldAlert } from "lucide-react";
+import { Loader2, ShieldAlert, Lock } from "lucide-react";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -15,25 +15,27 @@ export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
   const [errorStatus, setErrorStatus] = useState<string | null>(null);
 
   useEffect(() => {
+    // 🛡️ BROWSER BAR FIX: Page load hote hi body overflow control
+    document.body.style.overflow = authorized ? 'unset' : 'hidden';
+
     const checkUser = async () => {
       try {
-        // 1. Pehle current session check karein
+        // 1. Current Session Check (Fastest)
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        // 🚩 Agar session error hai ya session hi nahi hai
         if (sessionError || !session) {
-          console.warn("No active session found, redirecting...");
+          console.warn("Session Missing - Redirecting to Login");
           router.replace("/login");
           return;
         }
 
-        // 2. SERVER-SIDE VERIFICATION: getUser() refresh token issues ko fix karta hai
+        // 2. Server-Side Verification (Securest)
+        // getUser() call direct server se user data fetch karta hai, token refresh handle karne ke liye
         const { data: { user }, error: userError } = await supabase.auth.getUser();
 
         if (userError || !user) {
-          // Token expire ho chuka hai aur refresh nahi ho raha
-          console.error("User verification failed:", userError?.message);
-          await supabase.auth.signOut(); // Purana kachra saaf karein
+          console.error("User verification failed:", userError?.message || "Auth session missing!");
+          await supabase.auth.signOut(); // Purana token clear karein
           router.replace("/login");
           return;
         }
@@ -44,7 +46,8 @@ export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
           
           if (!allowedRoles.includes(userRole)) {
             setErrorStatus("ACCESS_DENIED");
-            setTimeout(() => router.replace("/"), 2000);
+            // 2 second baad wapas home par bhej dena
+            setTimeout(() => router.replace("/"), 2500);
             return;
           }
         }
@@ -60,7 +63,7 @@ export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
 
     checkUser();
 
-    // 🔄 REALTIME AUTH LISTENER: Agar doosre tab mein logout ho, toh yahan bhi update ho jaye
+    // 🔄 REALTIME AUTH LISTENER
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT" || !session) {
         setAuthorized(false);
@@ -68,33 +71,48 @@ export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, [router, allowedRoles]);
+    return () => {
+      subscription.unsubscribe();
+      document.body.style.overflow = 'unset';
+    };
+  }, [router, allowedRoles, authorized]);
 
-  // 🚫 Access Denied View
+  // 🚫 1. Access Denied View (Premium Blueprint Style)
   if (errorStatus === "ACCESS_DENIED") {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-red-50 p-6 text-center">
-        <ShieldAlert size={60} className="text-red-500 mb-4 animate-pulse" />
-        <h2 className="text-2xl font-[1000] text-red-700 uppercase italic">Access Denied</h2>
-        <p className="text-slate-500 font-bold text-sm mt-2 uppercase tracking-widest">
-          Aapke paas is page ko dekhne ki permission nahi hai.
-        </p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#fffafa] p-6 text-center">
+        <div className="bg-red-50 p-6 rounded-[35px] border-2 border-red-100 shadow-2xl shadow-red-100/50 animate-in zoom-in duration-500">
+          <ShieldAlert size={60} className="text-red-500 mb-6 mx-auto animate-pulse" />
+          <h2 className="text-2xl font-[1000] text-red-900 uppercase italic tracking-tighter leading-none">Access Denied</h2>
+          <div className="h-1 w-20 bg-red-200 mx-auto my-4 rounded-full"></div>
+          <p className="text-slate-500 font-black text-[11px] uppercase tracking-widest leading-relaxed">
+            Aapke paas is secure node <br/> ko access karne ki permission nahi hai.
+          </p>
+        </div>
       </div>
     );
   }
 
-  // ⏳ Loading View
+  // ⏳ 2. Loading View (Modern Enterprises Branding)
   if (!authorized) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-white">
-        <Loader2 className="animate-spin text-blue-600 mb-4" size={48} />
-        <p className="font-black text-slate-400 text-[10px] uppercase tracking-[5px] animate-pulse">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white overflow-hidden">
+        <div className="relative">
+          <Loader2 className="animate-spin text-blue-600 mb-8" size={54} strokeWidth={2.5} />
+          <Lock className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[70%] text-blue-100" size={18} />
+        </div>
+        <p className="font-[1000] text-slate-900 text-[11px] uppercase tracking-[6px] italic animate-pulse">
           Securely Verifying Node...
         </p>
+        <div className="mt-4 flex gap-1">
+          <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+          <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+          <div className="w-1.5 h-1.5 bg-blue-200 rounded-full animate-bounce"></div>
+        </div>
       </div>
     );
   }
 
+  // 🏗️ 3. Main Content
   return <>{children}</>;
 }

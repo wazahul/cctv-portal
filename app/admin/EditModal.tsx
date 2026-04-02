@@ -77,7 +77,7 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
               <Cpu size={20} />
             </div>
             <div>
-              <h3 className="text-lg font-[1000] text-slate-900 uppercase italic tracking-tighter leading-none">Edit Master</h3>
+              <h3 className="text-lg font-[1000] text-slate-900 uppercase italic tracking-tighter leading-none">Edit Device Details</h3>
               <p className="text-[9px] font-black text-blue-500 uppercase tracking-[3px] mt-1 leading-none italic">Modern Enterprises</p>
             </div>
           </div>
@@ -216,7 +216,7 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
               className="w-full bg-blue-600 text-white py-5 rounded-[28px] font-[1000] uppercase text-[15px] tracking-[4px] flex items-center justify-center gap-3 shadow-xl active:scale-95 disabled:opacity-50 transition-all border-b-[6px] border-blue-900 italic"
             >
               {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />} 
-              {isSaving ? "SYNCING..." : "Sync Master Data"}
+              {isSaving ? "SYNCING..." : "Update Device"}
             </button>
             <p className="text-center mt-8 text-[8px] font-black text-slate-300 uppercase tracking-[6px] italic opacity-40">Modern Cloud Engine</p>
           </div>

@@ -30,9 +30,9 @@ export default function AddDevicePage() {
 
   const [formData, setFormData] = useState<FormData>({
     device_sn: '', site_name: '', category: 'DVR (Analog)', model: '',
-    ip_address: '', user_name: 'user', user_pass: '', 
-    admin_name: 'admin', admin_pass: '', 
-    v_code: '', device_notes: '', radius: '100', latitude: '', longitude: '' 
+    ip_address: '', user_name: 'user', user_pass: 'Sitename@7021sn', 
+    admin_name: 'admin', admin_pass: 'DVR@MNDMsn', 
+    v_code: 'Wqa...', device_notes: '', radius: '100', latitude: '', longitude: '' 
   });
 
   // 🛡️ BLUEPRINT HMODAL: Browser Environment Setup (Scroll Lock & Hide UI)

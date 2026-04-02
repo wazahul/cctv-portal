@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { 
   X, Save, ShieldCheck, MapPin, Info, 
-  Eye, EyeOff, Navigation, Loader2, Cpu, Hash, Layers, Target
+  Eye, EyeOff, Navigation, Loader2, Cpu, Hash, Layers, Target, KeyRound
 } from "lucide-react";
 
 interface DeviceData {
@@ -52,7 +52,7 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
       (pos) => {
         setDevice({ 
           ...device, 
-          latitude: pos.coords.latitude.toFixed(8), // 🛰️ Ultra High Precision
+          latitude: pos.coords.latitude.toFixed(8),
           longitude: pos.coords.longitude.toFixed(8) 
         });
         setIsLocating(false);
@@ -65,7 +65,6 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
   return (
     <div className="fixed inset-0 z-[10000] bg-slate-900/60 backdrop-blur-md flex items-stretch sm:items-center justify-center p-0 animate-in fade-in duration-300">
       
-      {/* 📱 SHELL CONTAINER */}
       <div 
         style={{ height: 'calc(var(--vh, 1vh) * 100)' }}
         className="bg-[#fcfdfe] w-full max-w-xl sm:h-auto sm:max-h-[95vh] sm:rounded-[45px] shadow-2xl flex flex-col overflow-hidden relative animate-in slide-in-from-bottom duration-500"
@@ -124,7 +123,7 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
             <InputField label="Network IP" icon="🌐" value={device.ip_address} onChange={(v:any) => handleChange('ip_address', v)} />
           </div>
 
-          {/* 🔐 Security Credentials */}
+          {/* 🔐 Security Credentials (V-CODE ADDED HERE) */}
           <div className="bg-white p-6 rounded-[35px] border border-slate-100 shadow-xl space-y-6 relative overflow-hidden group">
             <div className="flex justify-between items-center relative z-10 px-1">
               <span className="text-[10px] font-[1000] text-blue-600 uppercase tracking-widest italic flex items-center gap-2">
@@ -134,15 +133,28 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
                 {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+            
             <div className="grid grid-cols-2 gap-4 relative z-10">
               <InputField label="User ID" icon="👤" value={device.user_name} onChange={(v:any) => handleChange('user_name', v)} light />
               <InputField label="User Pass" icon="🔑" type={showPass ? "text" : "password"} value={device.user_pass} onChange={(v:any) => handleChange('user_pass', v)} light />
               <InputField label="Admin ID" icon="🛠️" value={device.admin_name} onChange={(v:any) => handleChange('admin_name', v)} light />
               <InputField label="Admin Pass" icon="🔒" type={showPass ? "text" : "password"} value={device.admin_pass} onChange={(v:any) => handleChange('admin_pass', v)} light />
             </div>
+
+            {/* 🛡️ THE MISSING V-CODE FIELD */}
+            <div className="pt-2 relative z-10">
+              <InputField 
+                label="Verification Code (V-Code)" 
+                icon={<KeyRound size={16} className="text-orange-500" />} 
+                type={showPass ? "text" : "password"} 
+                value={device.v_code} 
+                onChange={(v:any) => handleChange('v_code', v)} 
+                light 
+              />
+            </div>
           </div>
 
-          {/* 📍 GPS SECTION (RE-ENGINEERED) */}
+          {/* 📍 GPS SECTION */}
           <div className="bg-white p-7 rounded-[40px] border border-slate-100 shadow-xl space-y-6 relative overflow-hidden">
             <div className="flex justify-between items-center">
               <div className="flex flex-col">
@@ -158,7 +170,6 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
               </button>
             </div>
 
-            {/* GPS Input Grid */}
             <div className="grid grid-cols-1 gap-4">
               <div className="flex gap-4">
                 <div className="flex-1 space-y-2">

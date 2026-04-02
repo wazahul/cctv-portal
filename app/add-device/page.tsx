@@ -37,13 +37,14 @@ export default function AddDevicePage() {
 
   // 🛡️ BLUEPRINT HMODAL: Browser Environment Setup
   useEffect(() => {
-    // Scroll Lock on Body to force internal scroll (helps hide browser UI on mobile)
+    // Force body to fixed to allow internal container to trigger browser UI hiding
     document.body.style.overflow = 'hidden';
     document.documentElement.style.scrollBehavior = 'smooth';
     
-    // Fix for mobile browser height (100dvh)
+    // Dynamic Viewport Height Fix for Mobile Browsers
     const setHeight = () => {
-      document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
     };
     window.addEventListener('resize', setHeight);
     setHeight();
@@ -122,13 +123,17 @@ export default function AddDevicePage() {
   };
 
   return (
+    // 🚩 ROOT: Absolute positioning for maximum browser UI interaction
     <div className="fixed inset-0 bg-slate-900/10 flex items-stretch sm:items-center justify-center p-0 animate-in fade-in duration-500 backdrop-blur-sm z-[100]">
       
-      {/* ✨ HMODAL MAIN CONTAINER: Set to 100dvh for mobile browser sync */}
-      <div className="w-full max-w-2xl bg-white h-[100dvh] sm:h-auto sm:max-h-[96vh] sm:rounded-[55px] shadow-[0_50px_100px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden relative animate-in slide-in-from-bottom duration-700">
+      {/* ✨ HMODAL MAIN CONTAINER: Uses dynamic vh for mobile browser sync */}
+      <div 
+        style={{ height: 'calc(var(--vh, 1vh) * 100)' }}
+        className="w-full max-w-2xl bg-white sm:h-auto sm:max-h-[96vh] sm:rounded-[55px] shadow-[0_50px_100px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden relative animate-in slide-in-from-bottom duration-700"
+      >
         
         {/* 🏗️ HMODAL STICKY HEADER */}
-        <div className="sticky top-0 z-[110] bg-white/90 backdrop-blur-xl border-b border-slate-100 p-6 flex justify-between items-center shrink-0 pt-[calc(env(safe-area-inset-top)+1.5rem)]">
+        <div className="sticky top-0 z-[110] bg-white/95 backdrop-blur-xl border-b border-slate-100 p-6 flex justify-between items-center shrink-0 pt-[calc(env(safe-area-inset-top)+1.5rem)]">
           <div className="flex items-center gap-4 italic text-left">
             <div className="bg-blue-600 p-4 rounded-[22px] text-white shadow-xl shadow-blue-100 ">
               <Cpu size={24} strokeWidth={2.5} />
@@ -143,8 +148,8 @@ export default function AddDevicePage() {
           </button>
         </div>
 
-        {/* 📝 HMODAL SCROLLABLE BODY: overscroll-contain hides browser UI on scroll down */}
-        <div className="flex-1 overflow-y-auto px-6 sm:px-10 space-y-10 pt-8 pb-44 text-left overscroll-contain touch-pan-y custom-scroll bg-[#fcfdfe]">
+        {/* 📝 HMODAL SCROLLABLE BODY: 'overscroll-contain' and 'touch-pan-y' trigger browser bar hiding */}
+        <div className="flex-1 overflow-y-auto px-6 sm:px-10 space-y-12 pt-8 pb-44 text-left overscroll-contain touch-pan-y custom-scroll bg-[#fcfdfe]">
           
           <div className="space-y-8 animate-in slide-in-from-left duration-500">
             <InputField label="Device Serial Number" icon="🔢" placeholder="AH1857798" 
@@ -228,7 +233,7 @@ export default function AddDevicePage() {
           </div>
 
           {/* 🚩 HMODAL FOOTER ACTION */}
-          <div className="pt-10 pb-40">
+          <div className="pt-10 pb-60 relative z-[50]">
             <button onClick={handleSave} disabled={loading}
               className="w-full bg-[#1a9e52] text-white font-[1000] py-8 rounded-[38px] flex items-center justify-center gap-4 shadow-[0_25px_60px_rgba(26,158,82,0.35)] active:scale-95 transition-all disabled:opacity-50 text-[16px] uppercase tracking-[5px] border-b-[8px] border-emerald-900 italic">
               {loading ? <Loader2 className="animate-spin" size={24} /> : <CheckCircle size={24} />} 
@@ -245,6 +250,7 @@ export default function AddDevicePage() {
   );
 }
 
+// InputField Sub-component
 function InputField({ label, placeholder, onChange, value, highlight = false, icon, light = false, type = "text" }: any) {
   return (
     <div className="w-full text-left space-y-3">
@@ -254,7 +260,7 @@ function InputField({ label, placeholder, onChange, value, highlight = false, ic
       <input 
         type={type}
         className={`w-full p-5 border-2 rounded-[28px] font-black italic text-slate-800 text-[13px] outline-none transition-all shadow-sm active:scale-[0.99] ${
-          light ? 'bg-slate-50 border-transparent focus:border-blue-200' : highlight ? 'bg-white border-emerald-100 focus:border-emerald-500 shadow-emerald-50' : 'bg-white border-slate-100 focus:border-blue-500'
+          light ? 'bg-slate-50 border-transparent focus:border-blue-200 shadow-inner' : highlight ? 'bg-white border-emerald-100 focus:border-emerald-500 shadow-emerald-50' : 'bg-white border-slate-100 focus:border-blue-500'
         }`}
         placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} />
     </div>

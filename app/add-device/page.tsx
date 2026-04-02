@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { 
   CheckCircle, Loader2, Cpu, X, Eye, EyeOff, 
   Navigation, MousePointer2, ShieldCheck, Disc,
-  Lock, Globe, Layout, Layers, Info
+  Lock, Layers, Info
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import MasterDialog from '@/lib/components/MasterDialog';
@@ -35,13 +35,13 @@ export default function AddDevicePage() {
     v_code: '', device_notes: '', radius: '100', latitude: '', longitude: '' 
   });
 
-  // 🛡️ BLUEPRINT HMODAL: Browser Environment Setup
+  // 🛡️ BLUEPRINT HMODAL: Browser Environment Setup (Scroll-to-Hide Logic)
   useEffect(() => {
-    // Force body to fixed to allow internal container to trigger browser UI hiding
+    // 1. Lock Body Scroll to force internal container scroll (Triggers Browser UI Hiding)
     document.body.style.overflow = 'hidden';
     document.documentElement.style.scrollBehavior = 'smooth';
     
-    // Dynamic Viewport Height Fix for Mobile Browsers
+    // 2. Dynamic Viewport Height Fix for Mobile
     const setHeight = () => {
       const vh = window.innerHeight * 0.01;
       document.documentElement.style.setProperty('--vh', `${vh}px`);
@@ -123,10 +123,10 @@ export default function AddDevicePage() {
   };
 
   return (
-    // 🚩 ROOT: Absolute positioning for maximum browser UI interaction
+    // 🚩 ROOT: Absolute fixed position for maximum browser sync
     <div className="fixed inset-0 bg-slate-900/10 flex items-stretch sm:items-center justify-center p-0 animate-in fade-in duration-500 backdrop-blur-sm z-[100]">
       
-      {/* ✨ HMODAL MAIN CONTAINER: Uses dynamic vh for mobile browser sync */}
+      {/* ✨ HMODAL MAIN CONTAINER: Dynamic Height Sync */}
       <div 
         style={{ height: 'calc(var(--vh, 1vh) * 100)' }}
         className="w-full max-w-2xl bg-white sm:h-auto sm:max-h-[96vh] sm:rounded-[55px] shadow-[0_50px_100px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden relative animate-in slide-in-from-bottom duration-700"
@@ -135,7 +135,7 @@ export default function AddDevicePage() {
         {/* 🏗️ HMODAL STICKY HEADER */}
         <div className="sticky top-0 z-[110] bg-white/95 backdrop-blur-xl border-b border-slate-100 p-6 flex justify-between items-center shrink-0 pt-[calc(env(safe-area-inset-top)+1.5rem)]">
           <div className="flex items-center gap-4 italic text-left">
-            <div className="bg-blue-600 p-4 rounded-[22px] text-white shadow-xl shadow-blue-100 ">
+            <div className="bg-blue-600 p-4 rounded-[22px] text-white shadow-xl shadow-blue-100">
               <Cpu size={24} strokeWidth={2.5} />
             </div>
             <div>
@@ -148,9 +148,10 @@ export default function AddDevicePage() {
           </button>
         </div>
 
-        {/* 📝 HMODAL SCROLLABLE BODY: 'overscroll-contain' and 'touch-pan-y' trigger browser bar hiding */}
+        {/* 📝 HMODAL SCROLLABLE BODY: Natural Scroll hides Browser UI */}
         <div className="flex-1 overflow-y-auto px-6 sm:px-10 space-y-12 pt-8 pb-44 text-left overscroll-contain touch-pan-y custom-scroll bg-[#fcfdfe]">
           
+          {/* Identity Section */}
           <div className="space-y-8 animate-in slide-in-from-left duration-500">
             <InputField label="Device Serial Number" icon="🔢" placeholder="AH1857798" 
               value={formData.device_sn} highlight
@@ -161,6 +162,7 @@ export default function AddDevicePage() {
               onChange={(v: string) => setFormData({...formData, site_name: v})} />
           </div>
 
+          {/* Logic & Categorization */}
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-3">
               <label className="text-[9px] font-black uppercase text-slate-400 ml-5 tracking-[3px] italic">Category</label>
@@ -182,6 +184,7 @@ export default function AddDevicePage() {
             </div>
           </div>
 
+          {/* GPS Toggle */}
           <div className="bg-slate-100/50 p-2 rounded-[35px] flex gap-2 border border-slate-200/50">
             <button type="button" onClick={() => setIsManual(false)} className={`flex-1 py-4 rounded-[28px] text-[10px] font-black uppercase transition-all flex items-center justify-center gap-2 italic ${!isManual ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400'}`}>
               <Navigation size={14} /> Satellite
@@ -198,18 +201,20 @@ export default function AddDevicePage() {
             </div>
           )}
 
+          {/* Network Details */}
           <div className="grid grid-cols-2 gap-6">
             <InputField label="Model No" icon="⚙️" placeholder="DS-XXXX" value={formData.model} onChange={(v: string) => setFormData({...formData, model: v})} />
             <InputField label="Static IP" icon="🌐" placeholder="192.168.1.XX" value={formData.ip_address} onChange={(v: string) => setFormData({...formData, ip_address: v})} />
           </div>
 
-          <div className="bg-white p-8 rounded-[45px] border border-slate-100 shadow-2xl shadow-slate-200/50 space-y-8 relative overflow-hidden group">
-            <div className="flex justify-between items-center relative z-10">
+          {/* Security Vault Card */}
+          <div className="bg-white p-8 rounded-[45px] border border-slate-100 shadow-2xl shadow-slate-200/40 space-y-8 relative overflow-hidden">
+            <div className="flex justify-between items-center relative z-10 px-1">
               <div className="flex items-center gap-3 text-blue-600">
                 <ShieldCheck size={22} strokeWidth={2.5}/>
                 <span className="text-[11px] font-[1000] uppercase tracking-[3px] italic">Access Vault</span>
               </div>
-              <button type="button" onClick={() => setShowPass(!showPass)} className="p-3.5 bg-slate-50 rounded-2xl text-blue-500 border border-blue-100 active:scale-90 transition-all">
+              <button type="button" onClick={() => setShowPass(!showPass)} className="p-3.5 bg-slate-50 rounded-2xl text-blue-500 border border-blue-100 active:scale-90 transition-all shadow-sm">
                 {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
@@ -226,13 +231,16 @@ export default function AddDevicePage() {
             </div>
           </div>
 
+          {/* Notes Section */}
           <div className="space-y-4">
-            <label className="text-[9px] font-black uppercase text-slate-400 ml-6 tracking-[3px] italic flex items-center gap-2"><Info size={12}/> Technical Remarks</label>
+            <label className="text-[9px] font-black uppercase text-slate-400 ml-6 tracking-[3px] italic flex items-center gap-2 leading-none block">
+              <Info size={14} className="text-slate-300" /> Technical Remarks
+            </label>
             <textarea className="w-full p-8 bg-white border-2 border-slate-100 rounded-[40px] outline-none text-sm font-bold text-slate-700 min-h-[160px] focus:border-blue-500 transition-all resize-none shadow-inner"
               placeholder="Enter critical Device details..." value={formData.device_notes} onChange={(e) => setFormData({...formData, device_notes: e.target.value})} />
           </div>
 
-          {/* 🚩 HMODAL FOOTER ACTION */}
+          {/* 🚩 FINAL FOOTER ACTION */}
           <div className="pt-10 pb-60 relative z-[50]">
             <button onClick={handleSave} disabled={loading}
               className="w-full bg-[#1a9e52] text-white font-[1000] py-8 rounded-[38px] flex items-center justify-center gap-4 shadow-[0_25px_60px_rgba(26,158,82,0.35)] active:scale-95 transition-all disabled:opacity-50 text-[16px] uppercase tracking-[5px] border-b-[8px] border-emerald-900 italic">
@@ -250,11 +258,11 @@ export default function AddDevicePage() {
   );
 }
 
-// InputField Sub-component
+// Sub-Component: InputField (HModal Consistent Style)
 function InputField({ label, placeholder, onChange, value, highlight = false, icon, light = false, type = "text" }: any) {
   return (
     <div className="w-full text-left space-y-3">
-      <label className="text-[9px] font-black uppercase text-slate-400 ml-5 tracking-[3px] italic flex items-center gap-2">
+      <label className="text-[9px] font-black uppercase text-slate-400 ml-5 tracking-[3px] italic flex items-center gap-2 leading-none uppercase">
         <span className="text-lg opacity-80">{icon}</span> {label}
       </label>
       <input 

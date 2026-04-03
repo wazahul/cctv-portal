@@ -56,7 +56,7 @@ export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
         // 🔐 ROLE-BASED ACCESS CHECK
         if (allowedRoles && allowedRoles.length > 0) {
           // Check both standard metadata paths
-          const userRole = user.user_metadata?.role || user.raw_user_meta_data?.role || "user";
+          const userRole = user.user_metadata?.role || (user as any).raw_user_meta_data?.role || "user";
           
           if (!allowedRoles.includes(userRole)) {
             console.warn(`AuthGuard: Role ${userRole} is not authorized for this node.`);

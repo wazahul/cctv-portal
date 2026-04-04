@@ -1,5 +1,5 @@
 "use client";
-import { X, AlertTriangle, CheckCircle2, Info, HelpCircle, Loader2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Info, HelpCircle, Loader2 } from "lucide-react";
 
 interface MasterDialogProps {
   isOpen: boolean;
@@ -20,51 +20,82 @@ export default function MasterDialog({
   
   if (!isOpen) return null;
 
-  // Type ke hisaab se colors aur icons set karna
+  // 🎨 Themes with Floating Icons & 3D Button Colors
   const themes = {
-    danger: { icon: <AlertTriangle size={32} />, color: "text-red-600", bg: "bg-red-50", btn: "bg-red-600" },
-    success: { icon: <CheckCircle2 size={32} />, color: "text-emerald-600", bg: "bg-emerald-50", btn: "bg-emerald-600" },
-    info: { icon: <Info size={32} />, color: "text-blue-600", bg: "bg-blue-50", btn: "bg-blue-600" },
-    warning: { icon: <HelpCircle size={32} />, color: "text-amber-600", bg: "bg-amber-50", btn: "bg-amber-600" },
+    danger: { 
+      icon: <AlertTriangle size={58} strokeWidth={2.5} />, 
+      color: "text-red-500", 
+      btn: "bg-red-600 border-red-800 shadow-red-900/20" 
+    },
+    success: { 
+      icon: <CheckCircle2 size={58} strokeWidth={2.5} />, 
+      color: "text-emerald-500", 
+      btn: "bg-emerald-600 border-emerald-800 shadow-emerald-900/20" 
+    },
+    info: { 
+      icon: <Info size={58} strokeWidth={2.5} />, 
+      color: "text-blue-600", 
+      btn: "bg-blue-600 border-blue-800 shadow-blue-900/20" 
+    },
+    warning: { 
+      icon: <HelpCircle size={58} strokeWidth={2.5} />, 
+      color: "text-amber-500", 
+      btn: "bg-amber-600 border-amber-800 shadow-amber-900/20" 
+    },
   };
 
   const theme = themes[type];
 
   return (
-    <div className="fixed inset-0 z-[5000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-sm rounded-[35px] shadow-2xl overflow-hidden border border-white animate-in zoom-in duration-300">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-slate-950/85 backdrop-blur-xl animate-in fade-in duration-500">
+      
+      {/* 📟 Premium Floating Container */}
+      <div className="bg-white w-full max-w-[400px] rounded-[65px] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] overflow-hidden border border-white/20 relative animate-in zoom-in duration-300">
         
-        <div className="p-8 text-center">
-          {/* Dynamic Icon Section */}
-          <div className={`mx-auto w-16 h-16 ${theme.bg} ${theme.color} rounded-full flex items-center justify-center mb-5`}>
-            {isLoading ? <Loader2 size={32} className="animate-spin" /> : theme.icon}
+        <div className="p-16 text-center">
+          
+          {/* ✨ CLEAN FLOATING ICON (No Box) */}
+          <div className={`mx-auto flex items-center justify-center mb-10 ${theme.color} drop-shadow-md transition-transform hover:scale-110 duration-500 active:scale-90`}>
+            {isLoading ? (
+              <Loader2 size={58} className="animate-spin text-blue-600" />
+            ) : (
+              theme.icon
+            )}
           </div>
 
-          <h3 className="text-xl font-[1000] text-slate-800 uppercase italic tracking-tighter leading-none">
+          {/* Text Content */}
+          <h3 className="text-[28px] font-[1000] text-slate-900 uppercase italic tracking-tighter leading-none mb-5">
             {title}
           </h3>
-          <p className="text-slate-500 text-sm font-bold mt-3 leading-relaxed px-2">
+          <p className="text-slate-500 text-[15px] font-bold leading-relaxed italic opacity-70 px-4">
             {message}
           </p>
         </div>
         
-        {/* Buttons Section */}
-        <div className="flex border-t border-slate-50 bg-slate-50/30">
+        {/* 🚀 3D TACTILE BUTTONS SECTION */}
+        <div className="flex border-t border-slate-50 bg-slate-50/50 p-5 gap-4">
+          
+          {/* Secondary Button (Cancel) */}
           <button 
-            disabled={isLoading}
+            type="button"
             onClick={onClose}
-            className="flex-1 py-5 text-[10px] font-black uppercase tracking-[2px] text-slate-400 hover:bg-white active:bg-slate-100 transition-all border-r border-slate-50 disabled:opacity-30"
+            disabled={isLoading}
+            className="flex-1 py-6 text-[11px] font-black uppercase tracking-[3px] text-slate-400 bg-white rounded-[32px] border-2 border-slate-100 hover:bg-slate-50 hover:border-slate-200 transition-all active:scale-95 disabled:opacity-30 shadow-sm"
           >
             {cancelText}
           </button>
+          
+          {/* Primary Button (Confirm) - The 3D Click Feel */}
           <button 
-            disabled={isLoading}
+            type="button"
             onClick={onConfirm}
-            className={`flex-1 py-5 text-[10px] font-black uppercase tracking-[2px] text-white ${theme.btn} hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-inner`}
+            disabled={isLoading}
+            className={`flex-1 py-6 text-[11px] font-black uppercase tracking-[3px] text-white ${theme.btn} rounded-[32px] hover:brightness-110 active:translate-y-1 active:border-b-0 transition-all shadow-xl border-b-[6px] flex items-center justify-center gap-2 italic`}
           >
-            {isLoading && <Loader2 size={12} className="animate-spin" />}
-            {confirmText}
+            {isLoading && <Loader2 size={14} className="animate-spin" />}
+            <span>{confirmText}</span>
           </button>
+          
         </div>
 
       </div>

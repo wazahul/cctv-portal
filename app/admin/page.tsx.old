@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import AuthGuard from "@/lib/components/AuthGuard"; 
 import RequestManagerModal, { RequestNotification } from "../request/RequestManagerModal";
-
+import { decryptData, encryptData } from '@/lib/crypto';
 import { 
   Search, Rocket, Pencil, MapPin, Plus, X,
   Loader2, LogOut, ClipboardList, 
@@ -85,15 +85,24 @@ export default function AdminCentral() {
         .order("created_at", { ascending: false });
 
       if (deviceData) {
-        const processed = deviceData.map((device: any) => {
-          const logs = device.service_logs || [];
-          const validLogs = logs
-            .filter((l: any) => l.next_service_date)
-            .sort((a: any, b: any) => new Date(b.next_service_date).getTime() - new Date(a.next_service_date).getTime());
-          return { ...device, next_service_date: validLogs.length > 0 ? validLogs[0].next_service_date : null };
-        });
-        setDevices(processed);
-      }
+      const processed = deviceData.map((device: any) => {
+        const logs = device.service_logs || [];
+        // 🔓 35 SAAL KA TAJARBA: List load karte waqt sensitive fields decrypt karein
+        const decryptedDevice = {
+          ...device,
+          user_pass: decryptData(device.user_pass),
+          admin_pass: decryptData(device.admin_pass),
+          v_code: decryptData(device.v_code)
+        };
+
+        const validLogs = logs
+          .filter((l: any) => l.next_service_date)
+          .sort((a: any) => /* sorting logic */ 0);
+
+        return { ...decryptedDevice, next_service_date: validLogs[0]?.next_service_date || null };
+      });
+      setDevices(processed);
+    }
       if (reqData) setPendingRequests(reqData);
     } catch (err) { console.error("Fetch Error:", err); } 
     finally { setLoading(false); }
@@ -112,9 +121,9 @@ export default function AdminCentral() {
           category: selectedDevice.category,
           model: selectedDevice.model,
           ip_address: selectedDevice.ip_address,
-          user_pass: selectedDevice.user_pass,
-          admin_pass: selectedDevice.admin_pass,
-          v_code: selectedDevice.v_code,
+          user_pass: encryptData(selectedDevice.user_pass),
+          admin_pass: encryptData(selectedDevice.admin_pass),
+          v_code: encryptData(selectedDevice.v_code),
           latitude: selectedDevice.latitude ? parseFloat(selectedDevice.latitude) : null,
           longitude: selectedDevice.longitude ? parseFloat(selectedDevice.longitude) : null,
           radius: selectedDevice.radius ? parseFloat(selectedDevice.radius) : 100,

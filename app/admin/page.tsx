@@ -23,7 +23,8 @@ export default function AdminCentral() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false); 
-  const [userRole, setUserRole] = useState("user"); 
+  const [userRole, setUserRole] = useState("user");
+  const [userName, setUserName] = useState<string | null>(null); 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState<any>(null);
@@ -52,8 +53,17 @@ export default function AdminCentral() {
   useEffect(() => {
     const initialize = async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      
       if (session) {
-        setUserRole(session.user.user_metadata?.role || "user");
+        const metadata = session.user.user_metadata;
+        
+        // 🚩 STEP 2: Role ke saath Name bhi set karein
+        setUserRole(metadata?.role || "user");
+        
+        // Agar full_name metadata mein hai toh wo, warna email ka pehla part
+        const fullName = metadata?.full_name || metadata?.name || session.user.email?.split('@')[0];
+        setUserName(fullName);
+        
         fetchData(); 
       }
     };
@@ -211,8 +221,9 @@ export default function AdminCentral() {
               <div>
                  <h1 className="text-lg sm:text-xl font-[1000] text-slate-900 tracking-tighter uppercase leading-none">Admin Central</h1>
                  <div className={`inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase ${isSuperAdmin ? 'bg-blue-100 text-blue-600' : 'bg-emerald-100 text-emerald-600'}`}>
-                   {isSuperAdmin ? <ShieldCheck size={10} /> : <UserIcon size={10} />}
-                   {userRole}
+                    {isSuperAdmin ? <ShieldCheck size={10} /> : <UserIcon size={10} />}
+                    {/* Yahan logic: Agar naam mil gaya toh naam, warna fallback role par */}
+                    {userName ? userName : userRole}
                  </div>
               </div>
             </div>

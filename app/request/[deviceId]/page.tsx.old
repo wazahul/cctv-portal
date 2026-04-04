@@ -131,20 +131,9 @@ export default function RequestPage() {
         
         <div className="bg-[#f0f7ff] p-8 sm:p-12 text-center border-b border-blue-50 relative shrink-0">
           {(userRole === "super_admin" || userRole === "engineer") && (
-            <button 
-      onClick={() => router.push('/admin')} 
-      className="absolute top-4 right-6 flex items-center gap-2 px-4 py-1.5 rounded-full 
-                 bg-white/40 backdrop-blur-md border border-slate-200/50 
-                 shadow-[0_4px_12px_rgba(0,0,0,0.05)] 
-                 active:scale-95 transition-all group"
-    >
-      {/* Icon color according to role */}
-      <ShieldCheck size={12} className={userRole === 'super_admin' ? 'text-blue-600' : 'text-emerald-600'} /> 
-      
-      <span className="text-[10px] font-[1000] uppercase tracking-widest text-slate-700">
-        {userName || userRole}
-      </span>
-    </button>
+            <button onClick={() => router.push('/admin')} className={`absolute top-4 right-6 px-4 py-2 rounded-full text-[9px] font-[1000] uppercase tracking-widest shadow-xl flex items-center gap-2 active:scale-90 transition-all text-white ${userRole === 'super_admin' ? 'bg-blue-600' : 'bg-emerald-600'}`}>
+              <ShieldCheck size={12} /> {userName || userRole}
+            </button>
           )}
           <h1 className="text-[28px] sm:text-[34px] font-[1000] text-slate-900 tracking-tighter uppercase italic mt-4 leading-tight truncate">{device?.site_name}</h1>
           <p className="text-slate-400 font-bold text-[9px] tracking-[3px] uppercase mt-2">Secure Terminal Access</p>

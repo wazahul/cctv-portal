@@ -9,7 +9,14 @@ export const COMPANY = {
     tagline: "Advanced Surveillance Systems",
     footerText: "High-Integrity Security Monitoring",
     copyRightYear: "2026",
-  }
+  },
+
+  links: {
+  linktree: "https://linktr.ee/wazahul",
+  whatsapp: "https://wa.me/917021330886",
+  website: "https://modernenterprises.com",
+}
+
 };
 
 /*
@@ -40,4 +47,14 @@ const company = COMPANY;
 <h3 className="text-[#1a4a8d] font-[1000]">
   {company.name}
 </h3>
+*/
+
+
+/* 
+     <span 
+       onClick={() => window.open(COMPANY.links.linktree, '_blank')}
+       className="text-blue-500/40 hover:text-blue-400 transition-all cursor-pointer active:scale-90 whitespace-nowrap" >
+       &copy; {COMPANY.branding.copyRightYear}
+        </span>
+
 */

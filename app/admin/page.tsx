@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useMemo } from "react";
+import { COMPANY } from "@/lib/config";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import AuthGuard from "@/lib/components/AuthGuard"; 
@@ -221,14 +222,30 @@ export default function AdminCentral() {
             <div className="flex items-center gap-3 italic">
               <div className="bg-blue-600 p-2.5 rounded-2xl shadow-xl shadow-blue-100"><Rocket className="text-white" size={20} /></div>
               <div>
-                 <h1 className="text-lg sm:text-xl font-[1000] text-slate-900 tracking-tighter uppercase leading-none">Admin Central</h1>
-                 <div className={`inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase ${isSuperAdmin ? 'bg-blue-100 text-blue-600' : 'bg-emerald-100 text-emerald-600'}`}>
-                    {isSuperAdmin ? <ShieldCheck size={10} /> : <UserIcon size={10} />}
-                    {/* Yahan logic: Agar naam mil gaya toh naam, warna fallback role par */}
-                    {userName ? userName : userRole}
-                 </div>
-              </div>
-            </div>
+        {/* 🔗 Company Branding Link */}
+        <a 
+          href={COMPANY.links.linktree} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="text-lg sm:text-xl font-[1000] text-black tracking-tighter uppercase leading-none hover:text-blue-500 transition-all block"
+        >
+          Admin <span className="text-blue-500 italic">Central</span>
+        </a>
+
+        {/* 🏷️ User Identity Badge */}
+        <div className={`inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[1px] border ${
+          isSuperAdmin 
+            ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
+            : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+        }`}>
+          {isSuperAdmin ? <ShieldCheck size={10} strokeWidth={3} /> : <UserIcon size={10} strokeWidth={3} />}
+          <span>{userName ? userName : userRole}</span>
+          
+          {/* Status Pulse */}
+          <span className={`w-1 h-1 rounded-full animate-pulse ml-1 ${isSuperAdmin ? 'bg-blue-400' : 'bg-emerald-400'}`}></span>
+        </div>
+      </div>
+    </div>
 
             <div className="flex gap-2">
               <button onClick={() => setIsSearchOpen(!isSearchOpen)} className={`p-2.5 rounded-2xl shadow-lg transition-all active:scale-90 ${isSearchOpen ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200 text-blue-600'}`}><Search size={16} /></button>

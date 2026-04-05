@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { COMPANY } from "@/lib/config";
 import { 
   X, Save, ShieldCheck, MapPin, Info, 
   Eye, EyeOff, Navigation, Loader2, Cpu, Hash, Layers, Target, KeyRound
@@ -70,14 +71,14 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
         className="bg-[#fcfdfe] w-full max-w-xl sm:h-auto sm:max-h-[95vh] sm:rounded-[45px] shadow-2xl flex flex-col overflow-hidden relative animate-in slide-in-from-bottom duration-500" >
         
         {/* 🏗️ STICKY HEADER */}
-        <div className="sticky top-0 z-[110] bg-white/95 backdrop-blur-xl p-4 flex justify-between items-center shrink-0 pt-[calc(env(safe-area-inset-top)+1rem)]">
+        <div className="sticky top-0 z-[110] bg-white/95 backdrop-blur-xl p-6 flex justify-between items-center shrink-0 pt-[calc(env(safe-area-inset-top)+1rem)]">
           <div className="flex items-center gap-3 italic text-left">
             <div className="bg-blue-600 p-2.5 rounded-xl text-white shadow-lg shadow-blue-100">
               <Cpu size={20} />
             </div>
             <div>
               <h3 className="text-lg font-[1000] text-slate-900 uppercase italic tracking-tighter leading-none">Edit Device Details</h3>
-              <p className="text-[9px] font-black text-blue-500 uppercase tracking-[3px] mt-1 leading-none italic">Modern Enterprises</p>
+              <p className="text-[9px] font-black text-blue-500 uppercase tracking-[3px] mt-1 leading-none italic">{COMPANY.name}</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2.5 bg-slate-100 rounded-xl text-slate-400 active:scale-90 border border-slate-200/50">

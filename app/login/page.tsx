@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { COMPANY } from "@/lib/config";
 import { useRouter } from "next/navigation";
 import { 
   Mail, Loader2, ShieldCheck, Cpu, Fingerprint, Activity
@@ -116,9 +117,9 @@ export default function LoginPage() {
             <span 
               onClick={() => router.push('/signup')}
               className="hover:text-blue-500 transition-all cursor-pointer px-1" >
-              &copy; 2026
+              &copy; {COMPANY.branding.copyRightYear}
             </span>
-            <span className="ml-2 tracking-[4px]">Modern Enterprises</span>
+            <span className="ml-2 tracking-[4px]">{COMPANY.name}</span>
           </p>
         </div>
       </div>

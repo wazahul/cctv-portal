@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
+import { COMPANY } from '@/lib/config';
 import { supabase } from '@/lib/supabaseClient';
 import { useParams, useRouter } from 'next/navigation';
 import AuthGuard from "@/lib/components/AuthGuard"; 
@@ -141,7 +142,7 @@ export default function ServiceReportPage() {
             </div>
             <div>
               <h3 className="text-lg font-[1000] text-slate-900 uppercase italic tracking-tighter leading-none">Create Service Report</h3>
-              <p className="text-[9px] font-black text-blue-500 uppercase tracking-[3px] mt-1 leading-none italic">Modern Enterprises</p>
+              <p className="text-[9px] font-black text-blue-500 uppercase tracking-[3px] mt-1 leading-none italic"> {COMPANY.name}</p>
             </div>
           </div>
           <button onClick={() => router.back()} className="p-2.5 bg-slate-100 rounded-xl text-slate-400 active:scale-90 border border-slate-200/50">

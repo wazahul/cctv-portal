@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { COMPANY } from "@/lib/config";
 import { useRouter } from "next/navigation";
 import AuthGuard from "@/lib/components/AuthGuard";
 import { 
@@ -94,7 +95,7 @@ export default function SignupPage() {
                 <div className="flex items-center gap-2 mt-2.5">
                   <Activity size={10} className="text-blue-500 animate-pulse" />
                   <span className="text-[9px] font-black text-slate-500 uppercase tracking-[3px] italic leading-none">
-                    Registration Node
+                    Access Setup
                   </span>
                 </div>
               </div>
@@ -165,13 +166,13 @@ export default function SignupPage() {
             
             <div className="flex flex-row items-center justify-center gap-2 text-[9px] font-[1000] uppercase tracking-[6px] italic">
               <span 
-                onClick={() => window.open('https://linktr.ee/wazahul', '_blank')}
+                onClick={() => window.open(COMPANY.links.linktree, '_blank')}
                 className="text-blue-500/40 hover:text-blue-400 transition-all cursor-pointer active:scale-90 whitespace-nowrap"
               >
-                &copy; 2026
+                &copy; {COMPANY.branding.copyRightYear}
               </span>
               <span className="text-slate-700 tracking-[8px] cursor-default whitespace-nowrap">
-                Modern Enterprises
+                {COMPANY.name}
               </span>
             </div>
           </div>

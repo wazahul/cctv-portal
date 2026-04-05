@@ -4,37 +4,28 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { encryptData } from '@/lib/crypto';
 import { 
-  MapPin, CheckCircle, Rocket, Loader2, Database, 
-  Disc, Navigation, MousePointer2, User, ShieldCheck, Hash, Monitor, X
+  MapPin, Rocket, Loader2, Database, 
+  Disc, Navigation, MousePointer2, ShieldCheck, Hash, X, Monitor, Key, Lock, Fingerprint, User, CircuitBoard, ClipboardEdit
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import MasterDialog from '@/lib/components/MasterDialog';
 
 interface FormData {
-  device_sn: string;
-  site_name: string;
-  category: string;
-  model: string;
-  ip_address: string;
-  user_name: string;
-  user_pass: string;
-  admin_name: string;
-  admin_pass: string;
-  v_code: string;
-  device_notes: string;
-  radius: string;
-  latitude: string;
-  longitude: string;
+  device_sn: string; site_name: string; category: string; model: string;
+  ip_address: string; user_name: string; user_pass: string;
+  admin_name: string; admin_pass: string; v_code: string;
+  device_notes: string; radius: string; latitude: string; longitude: string;
 }
 
- export default function AddDevicePage() {
+export default function AddDevicePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [isManual, setIsManual] = useState(false);
   
-  // Master Dialog State
+  // 🔔 Master Dialog State
   const [dialog, setDialog] = useState({
-    isOpen: false, title: "", message: "", type: "info" as any, onConfirm: () => setDialog(prev => ({...prev, isOpen: false}))
+    isOpen: false, title: "", message: "", type: "info" as any, 
+    onConfirm: () => setDialog(prev => ({...prev, isOpen: false}))
   });
 
   const [formData, setFormData] = useState<FormData>({
@@ -46,7 +37,12 @@ interface FormData {
 
   const handleSave = async () => {
     if (!formData.device_sn || !formData.site_name) {
-      setDialog({ isOpen: true, title: "Missing Data", message: "Serial Number and Site Name are mandatory.", type: "warning", onConfirm: () => setDialog(prev => ({...prev, isOpen: false})) });
+      setDialog({ 
+        isOpen: true, title: "Missing Data", 
+        message: "Serial Number and Site Name are mandatory.", 
+        type: "warning", 
+        onConfirm: () => setDialog(prev => ({...prev, isOpen: false})) 
+      });
       return;
     }
     
@@ -57,10 +53,6 @@ interface FormData {
     if (isManual) {
       finalLat = parseFloat(formData.latitude.trim());
       finalLng = parseFloat(formData.longitude.trim());
-      if (isNaN(finalLat!) || isNaN(finalLng!)) {
-        setDialog({ isOpen: true, title: "GPS Error", message: "Please enter valid coordinates for manual pinning.", type: "danger", onConfirm: () => setDialog(prev => ({...prev, isOpen: false})) });
-        setLoading(false); return;
-      }
     } else {
       try {
         const pos = await new Promise<GeolocationPosition>((res, rej) => 
@@ -69,165 +61,175 @@ interface FormData {
         finalLat = pos.coords.latitude;
         finalLng = pos.coords.longitude;
       } catch (e) { 
-        setDialog({ isOpen: true, title: "GPS Timeout", message: "Auto-GPS fail. Switch to Manual Mode.", type: "warning", onConfirm: () => setDialog(prev => ({...prev, isOpen: false})) });
+        setDialog({ 
+          isOpen: true, title: "GPS Timeout", 
+          message: "Auto-GPS failed. Please use Manual Mode.", 
+          type: "warning", 
+          onConfirm: () => setDialog(prev => ({...prev, isOpen: false})) 
+        });
         setLoading(false); return;
       }
     }
 
-    const { error } = await supabase.from('devices').insert([{ 
-      device_sn: formData.device_sn,
-      site_name: formData.site_name,
-      category: formData.category,
-      model: formData.model,
-      ip_address: formData.ip_address,
-      user_name: formData.user_name,
-      user_pass: encryptData(formData.user_pass),
-      admin_name: formData.admin_name,
-      admin_pass: encryptData(formData.admin_pass),
-      v_code: encryptData(formData.v_code),
-      device_notes: formData.device_notes,
-      radius: parseInt(formData.radius) || 200,
-      latitude: finalLat,
-      longitude: finalLng 
-    }]);
+    try {
+      const { error } = await supabase.from('devices').insert([{ 
+        ...formData,
+        user_pass: encryptData(formData.user_pass),
+        admin_pass: encryptData(formData.admin_pass),
+        v_code: encryptData(formData.v_code),
+        radius: parseInt(formData.radius) || 200,
+        latitude: finalLat,
+        longitude: finalLng 
+      }]);
 
+      if (error) throw error;
 
-    if (error) {
-      setDialog({ isOpen: true, title: "Database Error", message: error.message, type: "danger", onConfirm: () => setDialog(prev => ({...prev, isOpen: false})) });
-    } else {
       setDialog({ 
-        isOpen: true, title: "Registered!", message: `${formData.site_name} has been added to cloud inventory.`, type: "success", 
+        isOpen: true, title: "Registered!", 
+        message: `${formData.site_name} added to cloud inventory.`, 
+        type: "success", 
         onConfirm: () => router.push('/admin') 
       });
+    } catch (err: any) {
+      setDialog({ isOpen: true, title: "Database Error", message: err.message, type: "danger", onConfirm: () => setDialog(prev => ({...prev, isOpen: false})) });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-     <AuthGuard allowedRoles={["super_admin"]}>
-    <div className="min-h-screen bg-[#f1f5f9] flex items-center justify-center p-0 sm:p-4 font-sans text-left">
-      <div className="w-full max-w-[520px] bg-white h-screen sm:h-auto sm:rounded-[55px] shadow-2xl border-t sm:border border-white relative overflow-hidden flex flex-col">
-        
-        {/* 🌈 TOP GRADIENT */}
-        <div className="h-2 w-full bg-gradient-to-r from-blue-600 via-indigo-500 to-emerald-500 shrink-0"></div>
+    <AuthGuard allowedRoles={["super_admin"]}>
+    <div className="fixed inset-0 z-[999] bg-slate-900/60 backdrop-blur-md flex items-stretch sm:items-center justify-center p-0 animate-in fade-in duration-300">
+      
+      <div 
+        style={{ height: 'calc(var(--vh, 1vh) * 100)' }}
+        className="bg-[#fcfdfe] w-full max-w-xl sm:h-auto sm:max-h-[95vh] sm:rounded-[45px] shadow-2xl flex flex-col overflow-hidden relative animate-in slide-in-from-bottom duration-500" >
 
-        {/* 📌 NON-STICKY HEADER */}
-        <div className="p-8 pb-4 text-center shrink-0">
-          <div className="flex justify-between items-start">
-             <button onClick={() => router.back()} className="p-3 bg-slate-50 rounded-2xl text-slate-400 active:scale-90 border border-slate-100 transition-all"><X size={20}/></button>
-             <div className="bg-blue-50 p-4 rounded-[25px] shadow-inner"><Rocket className="text-blue-600" size={28} strokeWidth={2.5} /></div>
-             <div className="w-12"></div>
+        {/* 🏗️ STICKY GLASS HEADER */}
+        <div className="sticky top-0 z-[110] bg-white/95 backdrop-blur-xl p-6 flex justify-between items-center shrink-0 border-b border-slate-100 pt-[calc(env(safe-area-inset-top)+1.5rem)]">
+          <div className="flex items-center gap-3 italic text-left">
+            <div className="bg-blue-600 p-2.5 rounded-2xl text-white shadow-xl shadow-blue-100">
+              <CircuitBoard size={22} strokeWidth={2.5} />
+            </div>
+            <div>
+              <h3 className="text-lg font-[1000] text-slate-900 uppercase italic tracking-tighter leading-none">Register Device</h3>
+              <p className="text-[9px] font-black text-blue-500 uppercase tracking-[3px] mt-1.5 leading-none italic">Modern Enterprises</p>
+            </div>
           </div>
-          <h1 className="text-[26px] font-[1000] text-slate-900 tracking-tighter uppercase italic mt-4 leading-none">Register Device</h1>
-          <p className="text-slate-400 text-[9px] font-black mt-2 tracking-[3px] uppercase italic opacity-60">Terminal Input Module</p>
+          <button onClick={() => router.back()} className="p-3 bg-slate-100 rounded-2xl text-slate-400 active:scale-90 border border-slate-200/50 shadow-inner">
+            <X size={20} strokeWidth={3} />
+          </button>
         </div>
 
-        {/* 📝 FORM BODY (Touch Optimized Scroll) */}
-        <div className="flex-1 overflow-y-auto p-6 sm:p-10 space-y-7 custom-scroll pb-10">
+        {/* 📝 FORM BODY */}
+        <div className="flex-1 overflow-y-auto p-6 sm:p-10 space-y-8 custom-scroll pb-10 bg-white">
           
-          <InputField label="🔢 Device Serial Number (SN)" placeholder="DS-XXXXX" 
+          <InputField label="Device Serial Number (SN)" placeholder="S0420250605CCWRGB..." 
             value={formData.device_sn} icon={<Hash size={14}/>}
             onChange={(v) => setFormData({...formData, device_sn: v.toUpperCase()})} highlight={true} />
           
-          <InputField label="🏢 Site / Client Name" placeholder="Ex: Modern Towers" 
+          <InputField label="Site / Client Name" placeholder="Ex: Shaikh Villa" 
             value={formData.site_name} icon={<Database size={14}/>}
             onChange={(v) => setFormData({...formData, site_name: v})} />
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2 text-left">
-              <label className="text-[9px] font-black text-slate-400 uppercase ml-4 tracking-widest leading-none">📁 Category</label>
-              <select className="w-full p-5 bg-slate-50 border-2 border-slate-50 rounded-[25px] outline-none text-sm font-bold text-slate-700 appearance-none cursor-pointer focus:border-blue-400 transition-all"
+              <label className="text-[9px] font-black text-slate-400 uppercase ml-4 tracking-widest leading-none flex items-center gap-1.5">
+                <Monitor size={12}/> Category
+              </label>
+              <select className="w-full p-5 bg-slate-50 border-2 border-slate-50 rounded-[25px] outline-none text-sm font-bold text-slate-700 appearance-none focus:border-blue-400 transition-all shadow-sm"
                 value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})}>
-                <option value="DVR (Analog)">📹 DVR</option>
-                <option value="NVR (IP System)">🖥️ NVR</option>
-                <option value="IP Camera">👁️ IP Cam</option>
-                <option value="Biometric">☝️ Bio</option>
+                <option value="DVR (Analog)">📹 DVR (Analog)</option>
+                <option value="NVR (IP System)">🖥️ NVR (IP)</option>
+                <option value="IP Camera">👁️ IP Camera</option>
+                <option value="Biometric">☝️ Biometric</option>
               </select>
             </div>
             <div className="space-y-2 text-left">
-              <label className="text-[9px] font-black text-blue-400 uppercase ml-4 tracking-widest leading-none flex items-center gap-1"><Disc size={12}/> Radius (M)</label>
-              <input type="number" value={formData.radius} className="w-full p-5 bg-blue-50/50 border-2 border-blue-50 rounded-[25px] outline-none text-center font-black text-blue-600 focus:border-blue-400 transition-all"
+              <label className="text-[9px] font-black text-blue-400 uppercase ml-4 tracking-widest leading-none flex items-center gap-1.5">
+                <Disc size={12}/> Radius (M)
+              </label>
+              <input type="number" value={formData.radius} className="w-full p-5 bg-blue-50/50 border-2 border-blue-50 rounded-[25px] outline-none text-center font-black text-blue-600 focus:border-blue-400 transition-all shadow-sm"
                 onChange={(e) => setFormData({...formData, radius: e.target.value})} />
             </div>
           </div>
 
+          {/* 📍 GPS CONTROLS */}
           <div className="bg-slate-50 p-2 rounded-[30px] flex gap-2 border border-slate-100">
-            <button type="button" onClick={() => setIsManual(false)} className={`flex-1 py-4 rounded-[22px] text-[10px] font-black uppercase transition-all flex items-center justify-center gap-2 ${!isManual ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400'}`}><Navigation size={14} /> Auto GPS</button>
-            <button type="button" onClick={() => setIsManual(true)} className={`flex-1 py-4 rounded-[22px] text-[10px] font-black uppercase transition-all flex items-center justify-center gap-2 ${isManual ? 'bg-orange-500 text-white shadow-lg' : 'text-slate-400'}`}><MousePointer2 size={14} /> Manual</button>
+            <button type="button" onClick={() => setIsManual(false)} className={`flex-1 py-4 rounded-[22px] text-[10px] font-black uppercase flex items-center justify-center gap-2 ${!isManual ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400'}`}><Navigation size={14} /> Auto GPS</button>
+            <button type="button" onClick={() => setIsManual(true)} className={`flex-1 py-4 rounded-[22px] text-[10px] font-black uppercase flex items-center justify-center gap-2 ${isManual ? 'bg-orange-500 text-white shadow-lg' : 'text-slate-400'}`}><MousePointer2 size={14} /> Manual</button>
           </div>
 
           {isManual && (
             <div className="grid grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-300">
-              <InputField label="📍 Latitude" placeholder="19.076" value={formData.latitude} onChange={(v) => setFormData({...formData, latitude: v})} />
-              <InputField label="📍 Longitude" placeholder="72.877" value={formData.longitude} onChange={(v) => setFormData({...formData, longitude: v})} />
+              <InputField label="Latitude" placeholder="19.076..." icon={<MapPin size={12}/>} value={formData.latitude} onChange={(v) => setFormData({...formData, latitude: v})} />
+              <InputField label="Longitude" placeholder="72.877..." icon={<MapPin size={12}/>} value={formData.longitude} onChange={(v) => setFormData({...formData, longitude: v})} />
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4">
-            <InputField label="🏷️ Model No." placeholder="DS-7B08..." value={formData.model} onChange={(v) => setFormData({...formData, model: v})} />
-            <InputField label="🌐 Static IP" placeholder="192.168.1.1" value={formData.ip_address} onChange={(v) => setFormData({...formData, ip_address: v})} />
+            <InputField label="Model No." placeholder="DS-7B08-HUHI..." icon={<Monitor size={12}/>} value={formData.model} onChange={(v) => setFormData({...formData, model: v})} />
+            <InputField label="Static IP" placeholder="192.168.1.1..." icon={<Navigation size={12}/>} value={formData.ip_address} onChange={(v) => setFormData({...formData, ip_address: v})} />
           </div>
 
-          {/* 🔐 ACCESS CREDENTIALS SECTION */}
+          {/* 🔐 ACCESS CREDENTIALS */}
           <div className="bg-blue-50/30 p-6 rounded-[40px] border border-blue-100/50 space-y-6">
-            <div className="flex items-center gap-2 px-2"><ShieldCheck size={16} className="text-blue-500"/><span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Access Credentials</span></div>
+            <div className="flex items-center gap-2 px-2 italic font-black text-blue-600 text-[10px] uppercase tracking-widest">
+              <ShieldCheck size={16} /> Security Credentials
+            </div>
             
             <div className="grid grid-cols-2 gap-4">
-              <InputField label="👤 User Login ID" placeholder="admin" value={formData.user_name} onChange={(v) => setFormData({...formData, user_name: v})} />
-              <InputField label="🔑 User Secret Key" placeholder="****" value={formData.user_pass} onChange={(v) => setFormData({...formData, user_pass: v})} />
+              <InputField label="User Login ID" icon={<User size={12}/>} placeholder="admin" value={formData.user_name} onChange={(v) => setFormData({...formData, user_name: v})} />
+              <InputField label="User Secret Key" icon={<Key size={12}/>} placeholder="****" value={formData.user_pass} onChange={(v) => setFormData({...formData, user_pass: v})} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <InputField label="🛡️ Admin Login ID" placeholder="admin" value={formData.admin_name} onChange={(v) => setFormData({...formData, admin_name: v})} />
-              <InputField label="🔒 Admin Secret Key" placeholder="****" value={formData.admin_pass} onChange={(v) => setFormData({...formData, admin_pass: v})} />
+              <InputField label="Admin ID" icon={<ShieldCheck size={12}/>} placeholder="admin" value={formData.admin_name} onChange={(v) => setFormData({...formData, admin_name: v})} />
+              <InputField label="Admin Pass" icon={<Lock size={12}/>} placeholder="****" value={formData.admin_pass} onChange={(v) => setFormData({...formData, admin_pass: v})} />
             </div>
 
-            <InputField label="🔐 P2P V-Code" placeholder="Verification Code" value={formData.v_code} onChange={(v) => setFormData({...formData, v_code: v})} />
+            <InputField label="P2P V-Code" icon={<Fingerprint size={12}/>} placeholder="Verification Code" value={formData.v_code} onChange={(v) => setFormData({...formData, v_code: v})} />
           </div>
 
           <div className="space-y-2 text-left pb-4">
-            <label className="text-[9px] font-black text-slate-400 uppercase ml-6 tracking-widest leading-none">📝 Maintenance Notes</label>
+            <label className="text-[9px] font-black text-slate-400 uppercase ml-6 tracking-widest flex items-center gap-1.5"><ClipboardEdit size={12}/> Maintenance Notes</label>
             <textarea className="w-full p-6 bg-slate-50 border-2 border-slate-50 rounded-[30px] outline-none text-sm font-bold text-slate-700 min-h-[120px] focus:border-blue-400 transition-all resize-none shadow-inner"
               placeholder="Hardware specifics, history, or issues..." value={formData.device_notes} onChange={(e) => setFormData({...formData, device_notes: e.target.value})} />
           </div>
         </div>
 
-        {/* 💾 STICKY FOOTER */}
+        {/* 💾 FOOTER */}
         <div className="p-6 bg-white border-t border-slate-50 shrink-0">
           <button onClick={handleSave} disabled={loading}
-            className="w-full bg-[#1a9e52] hover:bg-emerald-700 text-white font-[1000] py-6 rounded-[30px] flex items-center justify-center gap-4 shadow-xl active:scale-95 transition-all disabled:opacity-50 text-[16px] uppercase tracking-[4px] border-b-4 border-emerald-900 active:border-b-0">
+            className="w-full bg-[#1a9e52] hover:bg-emerald-700 text-white font-[1000] py-6 rounded-[30px] flex items-center justify-center gap-4 shadow-xl active:scale-95 transition-all disabled:opacity-50 text-[16px] uppercase tracking-[4px] border-b-4 border-emerald-900 active:border-b-0 italic">
             {loading ? <Loader2 className="animate-spin" size={24} /> : <Database size={24} />} 
-            {loading ? 'Processing...' : 'Register Secure Node'}
+            {loading ? 'Processing...' : 'Register Device'}
           </button>
         </div>
       </div>
 
-      <MasterDialog isOpen={dialog.isOpen} onClose={() => setDialog(prev => ({...prev, isOpen: false}))} onConfirm={dialog.onConfirm} title={dialog.title} message={dialog.message} type={dialog.type} confirmText="Understood" />
+      <MasterDialog 
+        isOpen={dialog.isOpen} onClose={() => setDialog(prev => ({...prev, isOpen: false}))} 
+        onConfirm={dialog.onConfirm} title={dialog.title} message={dialog.message} type={dialog.type} confirmText="Understood" 
+      />
     </div>
-    </AuthGuard> // 🛡️ Wrapper Closing Tag
+    </AuthGuard>
   );
 }
 
 function InputField({ label, placeholder, onChange, value, highlight = false, icon }: {
-  label: string;
-  placeholder: string;
-  onChange: (v: string) => void; // 👈 Ye 'v' ko string define kar raha hai
-  value: string;
-  highlight?: boolean;
-  icon?: React.ReactNode;
+  label: string; placeholder: string; onChange: (v: string) => void; value: string; highlight?: boolean; icon?: React.ReactNode;
 }) {
   return (
     <div className="w-full text-left font-bold space-y-2">
-      <label className="text-[9px] font-black text-slate-400 uppercase ml-4 tracking-widest leading-none flex items-center gap-1">
+      <label className="text-[9px] font-black text-slate-400 uppercase ml-4 tracking-widest leading-none flex items-center gap-1.5">
         {icon}{label}
       </label>
       <input 
-        className={`w-full p-5 bg-slate-50 border-2 rounded-[25px] outline-none text-sm font-bold text-slate-700 transition-all ${
+        className={`w-full p-5 bg-slate-50 border-2 rounded-[25px] outline-none text-sm font-bold text-slate-700 transition-all shadow-sm ${
           highlight ? 'border-emerald-100 focus:border-emerald-400' : 'border-slate-50 focus:border-blue-400'
         }`}
-        placeholder={placeholder} 
-        value={value} 
-        onChange={(e) => onChange(e.target.value)} // 👈 Browser event se string nikaal kar bhej raha hai
+        placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} 
       />
     </div>
   );

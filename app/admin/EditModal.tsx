@@ -67,8 +67,7 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
       
       <div 
         style={{ height: 'calc(var(--vh, 1vh) * 100)' }}
-        className="bg-[#fcfdfe] w-full max-w-xl sm:h-auto sm:max-h-[95vh] sm:rounded-[45px] shadow-2xl flex flex-col overflow-hidden relative animate-in slide-in-from-bottom duration-500"
-      >
+        className="bg-[#fcfdfe] w-full max-w-xl sm:h-auto sm:max-h-[95vh] sm:rounded-[45px] shadow-2xl flex flex-col overflow-hidden relative animate-in slide-in-from-bottom duration-500" >
         
         {/* 🏗️ STICKY HEADER */}
         <div className="sticky top-0 z-[110] bg-white/95 backdrop-blur-xl p-4 flex justify-between items-center shrink-0 pt-[calc(env(safe-area-inset-top)+1rem)]">

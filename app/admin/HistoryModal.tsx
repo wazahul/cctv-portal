@@ -106,8 +106,11 @@ export default function HistoryModal({ isOpen, onClose, sn, siteName }: HistoryM
 
   return (
     <>
-      <div className="fixed inset-0 z-[150] flex items-stretch sm:items-center justify-center bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-300">
-        <div className="w-full max-w-xl bg-white sm:rounded-[40px] shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom duration-500 h-full sm:h-auto sm:max-h-[90vh] flex flex-col overscroll-none">
+       <div className="fixed inset-0 z-[999] bg-slate-900/60 backdrop-blur-md flex items-stretch sm:items-center justify-center p-0 animate-in fade-in duration-300">
+      
+      <div 
+        style={{ height: 'calc(var(--vh, 1vh) * 100)' }}
+        className="bg-[#fcfdfe] w-full max-w-xl sm:h-auto sm:max-h-[95vh] sm:rounded-[45px] shadow-2xl flex flex-col overflow-hidden relative animate-in slide-in-from-bottom duration-500" >
           
           {/* HEADER (Sticky) */}
           <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10 shrink-0 text-left">

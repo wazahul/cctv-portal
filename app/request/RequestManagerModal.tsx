@@ -103,7 +103,7 @@ export default function RequestManagerModal({ isOpen, onClose, onRefresh, filter
           <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white shrink-0 text-left">
             <div>
               <h2 className="text-lg font-[1000] text-slate-900 uppercase italic flex items-center gap-2 tracking-tighter leading-none">
-                <ShieldCheck className="text-blue-600" size={22} /> Tasks Manager
+                <ShieldCheck className="text-blue-600" size={22} /> Requests Manager
               </h2>
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-[2px] mt-1.5">Live Requests</p>
             </div>

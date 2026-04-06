@@ -106,7 +106,7 @@ export default function PrintStickersPage() {
         .a4-container {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
-          gap: 5px;
+          gap: 20px;
           max-width: 210mm;
           margin: 0 auto;
           padding: 20px;

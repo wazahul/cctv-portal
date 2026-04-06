@@ -40,14 +40,14 @@ export default function PrintStickersPage() {
                 
                 {/* QR */}
                 <div className="flex flex-col items-center shrink-0">
-                  <div className="relative p-1.5 bg-white border-2 border-blue-200 rounded-[16px]">
+                  <div className="relative p-2.5 bg-white border-2 border-blue-200 rounded-[16px]">
                     <img 
                       src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(company.portalUrl + '/' + device?.device_sn)}`} 
-                      className="w-[130pt] h-[130pt] block" 
+                      className="w-[120pt] h-[120pt] block" 
                       alt="QR"
                     />
-                    <div className="absolute -top-1 -left-1 w-7 h-7 border-t-[5px] border-l-[5px] border-[#1a4a8d] rounded-tl-2xl"></div>
-                    <div className="absolute -bottom-1 -right-1 w-7 h-7 border-b-[5px] border-r-[5px] border-[#1a4a8d] rounded-br-2xl"></div>
+                    <div className="absolute -top-1 -left-1 w-8 h-8 border-t-[5px] border-l-[5px] border-[#1a4a8d] rounded-tl-2xl"></div>
+                    <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-[5px] border-r-[5px] border-[#1a4a8d] rounded-br-2xl"></div>
                   </div>
                   <p className="text-[6.5pt] font-black text-slate-400 uppercase tracking-[3px] mt-1 italic">Scan to View Logs & Reports</p>
                 </div>
@@ -66,22 +66,22 @@ export default function PrintStickersPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-[7.5pt] font-black text-slate-500 uppercase tracking-widest ml-1">Service Date</label>
-                      <div className="w-full border-b-[2pt] border-gray-400 pb-6"></div>
+                      <div className="w-full border-b-[2pt] border-gray-400 pb-5"></div>
                     </div>
                     <div>
                       <label className="text-[7.5pt] font-black text-slate-500 uppercase tracking-widest ml-1">Technician Sign.</label>
-                      <div className="w-full border-b-[2pt] border-gray-400 pb-6"></div>
+                      <div className="w-full border-b-[2pt] border-gray-400 pb-5"></div>
                     </div>
                   </div>
                 </div>
 
                 {/* Footer */}
-                <div className="w-full mt-3 pt-1 border-t-2 border-dashed border-gray-400 flex flex-col items-center shrink-0">
+                <div className="w-full pt-1 border-t-2 border-dashed border-gray-200 flex flex-col items-center shrink-0">
                   <h3 className="text-[12pt] mt-5 font-[1000] text-[#1a4a8d] uppercase italic tracking-[3px] leading-none">
                     {company.name}
                   </h3>
                   <p className="text-slate-500 text-[8pt] font-black mt-3 leading-none">
-                    {company.contact}
+                     Support: {company.contact}
                   </p>
                 </div>
               </div>

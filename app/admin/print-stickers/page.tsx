@@ -18,25 +18,20 @@ export default function PrintStickersPage() {
   return (
     <div className="bg-slate-900 min-h-screen font-sans print:bg-white overflow-x-hidden">
       
-      {/* 🚩 THE MASTER GRID: Strict 2x2 Logic */}
       <div className="a4-container mx-auto">
         {items.length > 0 ? items.map((device, index) => (
           <div key={index} className="sticker-slot">
             
-            {/* --- 🛡️ THE PREMIUM CARD --- */}
             <div 
               className="sticker-card bg-white border-[3pt] border-[#1a4a8d] rounded-[40px] overflow-hidden relative flex flex-col h-full w-full shadow-2xl print:shadow-none print:border-[#1a4a8d]"
+              /* 🚩 CRITICAL: Force background color and graphics for this card */
               style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}
             >
               
-              {/* Header - Added explicit background for Print */}
+              {/* Header: Added explicit style for print engine */}
               <div 
-                className="p-5 flex justify-between items-center text-white shrink-0"
-                style={{ 
-                  backgroundColor: '#1a4a8d', 
-                  WebkitPrintColorAdjust: 'exact', 
-                  printColorAdjust: 'exact' 
-                }}
+                className="bg-[#1a4a8d] p-5 flex justify-between items-center text-white shrink-0"
+                style={{ backgroundColor: '#1a4a8d', WebkitPrintColorAdjust: 'exact' }}
               >
                 <div className="leading-none text-left">
                   <h1 className="text-[16pt] font-[1000] uppercase italic tracking-tighter">Security System</h1>
@@ -45,18 +40,16 @@ export default function PrintStickersPage() {
                 <Camera size={28} className="text-white mr-5" />
               </div>
 
-              {/* Body with Dot Pattern */}
+              {/* Body: Force background pattern for print */}
               <div 
                 className="p-4 flex flex-col items-center justify-between flex-1 overflow-hidden"
                 style={{ 
                   backgroundImage: 'radial-gradient(#cbd5e1 1.2px, transparent 1.2px)',
                   backgroundSize: '20px 20px',
-                  WebkitPrintColorAdjust: 'exact', 
-                  printColorAdjust: 'exact' 
+                  WebkitPrintColorAdjust: 'exact'
                 }}
               >
                 
-                {/* QR Section */}
                 <div className="flex flex-col items-center shrink-0">
                   <div className="relative p-2.5 bg-white border-2 border-blue-200 rounded-[16px]">
                     <img 
@@ -70,7 +63,6 @@ export default function PrintStickersPage() {
                   <p className="text-[6.5pt] font-black text-slate-400 uppercase tracking-[3px] mt-1 italic">Scan to View Logs & Reports</p>
                 </div>
 
-                {/* Info Fields */}
                 <div className="w-full space-y-4 px-2 shrink-0 text-left">
                   <div>
                     <label className="text-[7.5pt] font-black text-slate-500 uppercase tracking-widest ml-1 leading-none"> Site Location </label>
@@ -91,7 +83,6 @@ export default function PrintStickersPage() {
                   </div>
                 </div>
 
-                {/* Footer branding */}
                 <div className="w-full pt-1 border-t-2 border-dashed border-gray-200 flex flex-col items-center shrink-0">
                   <h3 className="text-[12pt] mt-5 font-[1000] text-[#1a4a8d] uppercase italic tracking-[3px] leading-none">
                     {company.name}
@@ -103,7 +94,6 @@ export default function PrintStickersPage() {
               </div>
             </div>
 
-            {/* 🚩 Page Break Logic */}
             {(index + 1) % 4 === 0 && <div className="page-break" />}
           </div>
         )) : null}
@@ -116,16 +106,17 @@ export default function PrintStickersPage() {
       <style jsx global>{`
         * { box-sizing: border-box !important; }
 
-        /* Screen View Logic */
+        /* Screen View */
         .a4-container {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
           width: 210mm;
+          margin: 0 auto;
         }
 
         .sticker-slot {
-          width: 105mm;
           height: 148.5mm;
+          width: 105mm;
           display: flex;
           justify-content: center;
           align-items: center;
@@ -133,23 +124,21 @@ export default function PrintStickersPage() {
         }
 
         @media print {
-          @page { 
-            size: A4 portrait; 
-            margin: 0 !important; 
-          }
+          @page { size: A4 portrait; margin: 0 !important; }
           
-          body { 
-            background: white !important; 
-            margin: 0 !important; 
-            padding: 0 !important;
-            width: 210mm;
-            height: 297mm;
+          /* 🚩 Global Print Fix for all Browsers */
+          * { 
+            -webkit-print-color-adjust: exact !important; 
+            print-color-adjust: exact !important; 
+            color-adjust: exact !important;
           }
+
+          body { background: white !important; margin: 0 !important; padding: 0 !important; }
           
           .a4-container {
             display: grid !important;
             grid-template-columns: 105mm 105mm !important;
-            grid-auto-rows: 143mm !important; /* 🚩 Mobile margin safety */
+            grid-auto-rows: 143mm !important; /* Mobile safe height */
             gap: 0 !important;
             width: 210mm !important;
           }
@@ -167,22 +156,6 @@ export default function PrintStickersPage() {
             display: block;
             page-break-after: always;
             break-after: page;
-            height: 0;
-          }
-
-          /* Global print force color */
-          * { 
-            -webkit-print-color-adjust: exact !important; 
-            print-color-adjust: exact !important; 
-            color-adjust: exact !important;
-          }
-        }
-
-        /* Mobile View Scaling */
-        @media (max-width: 210mm) {
-          .a4-container {
-            transform: scale(calc(100vw / 220mm));
-            transform-origin: top center;
           }
         }
       `}</style>

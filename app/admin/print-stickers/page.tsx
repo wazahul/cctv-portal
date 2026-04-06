@@ -100,7 +100,7 @@ export default function PrintStickersPage() {
       </div>
 
       <button onClick={() => window.print()} className="fixed bottom-10 right-10 bg-blue-600 text-white px-12 py-6 rounded-full font-[1000] shadow-2xl hover:bg-blue-500 active:scale-95 transition-all uppercase tracking-[4px] italic border-b-[6px] border-blue-900 print:hidden z-[999] flex items-center gap-3">
-        <Printer size={24} /> Initialize Print
+        <Printer size={24} />Print
       </button>
 
       <style jsx global>{`

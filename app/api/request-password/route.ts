@@ -75,13 +75,17 @@ export async function POST(req: Request) {
           </p>
         </div>
 
-        <p style="margin: 15px 0 0 0; color: #64748b; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">⏰ Requested At: ${requestTimestamp}</p>
+        <p style="margin: 15px 0 0 0; color: #64748b; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">
+          ⏰ Requested At: ${requestTimestamp}
+        </p>
       </div>
 
+      {/* 🚀 Admin Action Button */}
       <a href="${techWaLink}" style="display: block; text-align: center; background: #2563eb; color: white; padding: 20px; border-radius: 20px; text-decoration: none; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);">
          Process via WhatsApp
       </a>
 
+      {/* 🏢 Branding Footer (Fixed Property) */}
       <p style="text-align: center; font-size: 10px; color: #cbd5e1; margin-top: 30px; letter-spacing: 3px; font-weight: bold; text-transform: uppercase;">
         ${COMPANY?.name || "Modern Enterprises"} | ${COMPANY?.branding?.copyRightYear || "2026"}
       </p>

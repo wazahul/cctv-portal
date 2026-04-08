@@ -4,9 +4,10 @@ export const COMPANY = {
   name: "MODERN ENTERPRISES",
   contact: "+91 7021330886",
   portalUrl: "https://cctv-portal.vercel.app/request",
-  supportEmail: "admin@modern.pro",
+  supportEmail: "me.cctv247@gmail.com",
   branding: {
     tagline: "Advanced Surveillance Systems",
+    tagline2: "SECURITY SOLUTIONS & INTERIOR DECORATOR",
     footerText: "High-Integrity Security Monitoring",
     copyRightYear: "2026",
   },
@@ -57,4 +58,19 @@ const company = COMPANY;
        &copy; {COMPANY.branding.copyRightYear}
         </span>
 
+*/
+  
+/*
+📌 Usage Example (Alternative Style)
+
+⚠️ Common Problems
+❌ 1. Undefined error
+
+Agar branding ya tagline2 nahi hai:
+
+COMPANY.branding.tagline2 // ❌ undefined
+
+👉 Safe version use karo:
+
+doc.text(COMPANY?.branding?.tagline2 || "", 35, 22);
 */

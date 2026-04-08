@@ -83,7 +83,7 @@ export async function POST(req: Request) {
       </a>
 
       <p style="text-align: center; font-size: 10px; color: #cbd5e1; margin-top: 30px; letter-spacing: 3px; font-weight: bold; text-transform: uppercase;">
-        ${COMPANY?.name || "Modern Enterprises"} | ${COMPANY?.branding?.year || "2026"}
+        ${COMPANY?.name || "Modern Enterprises"} | ${COMPANY?.branding?.copyRightYear || "2026"}
       </p>
     </div>
   `,

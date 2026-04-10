@@ -1,0 +1,118 @@
+"use client";
+import React, { useMemo, useEffect, useState } from "react";
+import { MapContainer, TileLayer, Marker, useMapEvents, Circle, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// 🚩 Icon fix: Server par L.icon define nahi ho sakta, isliye function banaya
+const getIcon = () => {
+  if (typeof window === 'undefined') return null;
+  return L.icon({
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41]
+  });
+};
+
+function RecenterMap({ coords }: { coords: [number, number] }) {
+  const map = useMap();
+  useEffect(() => {
+    if (coords && coords[0] && coords[1]) {
+      map.setView(coords);
+    }
+  }, [coords, map]);
+  return null;
+}
+
+function LocationPicker({ position, setPosition }: any) {
+  const icon = useMemo(() => getIcon(), []);
+  useMapEvents({
+    click(e) {
+      setPosition(e.latlng.lat.toFixed(8), e.latlng.lng.toFixed(8));
+    },
+  });
+
+  if (!icon) return null;
+
+  return (
+    <Marker 
+      position={position} 
+      icon={icon} 
+      draggable={true}
+      eventHandlers={useMemo(() => ({
+        dragend(e) {
+          const marker = e.target;
+          const pos = marker.getLatLng();
+          setPosition(pos.lat.toFixed(8), pos.lng.toFixed(8));
+        },
+      }), [setPosition])}
+    />
+  );
+}
+
+interface MapPickerProps {
+  lat: number;
+  lng: number;
+  radius: number;
+  onLocationChange: (lat: string, lng: string) => void;
+}
+
+export default function MapPicker({ lat, lng, radius, onLocationChange }: MapPickerProps) {
+  const [mounted, setMounted] = useState(false);
+
+  // 🛡️ Client-Side Hydration Safety
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const center = useMemo<[number, number]>(() => {
+    return [Number(lat) || 19.1623522, Number(lng) || 72.9335731];
+  }, [lat, lng]);
+
+  if (!mounted || typeof window === 'undefined') {
+    return (
+      <div className="h-[300px] w-full bg-slate-100 rounded-[35px] flex items-center justify-center border-2 border-dashed border-slate-200">
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Syncing Satellite...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-[300px] w-full rounded-[35px] overflow-hidden border-4 border-white shadow-2xl relative z-10 bg-slate-200 group">
+      <MapContainer 
+        center={center} 
+        zoom={19} 
+        maxZoom={20} 
+        style={{ height: '100%', width: '100%' }}
+        scrollWheelZoom={true}
+      >
+        <TileLayer 
+          url="https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+          subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
+          maxZoom={20}
+          attribution="&copy; Google Maps Satellite"
+        />
+        <RecenterMap coords={center} />
+        <LocationPicker position={center} setPosition={onLocationChange} />
+        <Circle 
+          center={center} 
+          radius={Number(radius) || 100} 
+          pathOptions={{ 
+            color: '#ef4444', 
+            fillColor: '#ef4444', 
+            fillOpacity: 0.1, 
+            weight: 2,
+            dashArray: '5, 10'
+          }} 
+        />
+      </MapContainer>
+      <div className="absolute top-4 right-4 z-[1000] bg-white/80 backdrop-blur-md px-3 py-1 rounded-xl border border-white/50 shadow-sm">
+         <p className="text-[8px] font-black text-slate-800 uppercase tracking-widest italic leading-none">Satellite Detail Active</p>
+      </div>
+    </div>
+  );
+}

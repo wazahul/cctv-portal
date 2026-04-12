@@ -1,4 +1,5 @@
 "use client";
+// app/login/page.tsx
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { COMPANY } from "@/lib/config";
@@ -117,9 +118,9 @@ export default function LoginPage() {
             <span 
               onClick={() => router.push('/signup')}
               className="hover:text-blue-500 transition-all cursor-pointer px-1" >
-              &copy; {COMPANY.branding.copyRightYear}
+              &copy; {COMPANY?.branding?.copyRightYear || "2026"}
             </span>
-            <span className="ml-2 tracking-[4px]">{COMPANY.name}</span>
+            <span className="ml-2 tracking-[4px]">{COMPANY?.name || "Modern Enterprises"}</span>
           </p>
         </div>
       </div>

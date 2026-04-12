@@ -1,4 +1,5 @@
 "use client";
+// aap/lib/components/AuthGuard.tsx - 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";

@@ -1,5 +1,5 @@
 "use client";
-//app/request/[deviceId]/page.tsx
+// app/request/[deviceId]/page.tsx
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
@@ -45,17 +45,49 @@ export default function RequestPage() {
         }
 
         // 3. Regular User GPS Check
-        if ("geolocation" in navigator) {
-          navigator.geolocation.getCurrentPosition((pos) => {
-            const R = 6371000;
-            const dLat = (dev.latitude - pos.coords.latitude) * Math.PI / 180;
-            const dLon = (dev.longitude - pos.coords.longitude) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(pos.coords.latitude * Math.PI/180) * Math.cos(dev.latitude * Math.PI/180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+      if ("geolocation" in navigator) {
+        // 🎯 Accurate tracking ke liye navigator options set kiye hain
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const R = 6371000; // Earth radius in meters
+            const userLat = pos.coords.latitude;
+            const userLon = pos.coords.longitude;
+            const devLat = dev.latitude;
+            const devLon = dev.longitude;
+
+            // 📐 Haversine Formula: Do points ke beech ka rasta nikalne ke liye
+            const dLat = (devLat - userLat) * Math.PI / 180;
+            const dLon = (devLon - userLon) * Math.PI / 180;
+            
+            const a = 
+              Math.sin(dLat/2) * Math.sin(dLat/2) + 
+              Math.cos(userLat * Math.PI/180) * Math.cos(devLat * Math.PI/180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            
             const distance = R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+            
+            // 📏 Geofence Check: Kya user radius (default 200m) ke andar hai?
             setInRange(distance <= (dev.radius || 200));
             setLoading(false);
-          }, () => { setInRange(false); setLoading(false); }, { enableHighAccuracy: true });
-        } else { setInRange(false); setLoading(false); }
+          }, 
+          (err) => { 
+            console.error("🚨 GPS Connection Failed:", err.message);
+            // Error aane par access block karein
+            setInRange(false); 
+            setLoading(false); 
+          }, 
+          { 
+            enableHighAccuracy: true, // 🎯 Sabse accurate GPS data
+            timeout: 12000,           // ⏰ 12 second tak wait karega (Satellite link fix)
+            maximumAge: 0             // 🔄 Cache location use nahi karega, hamesha fresh data
+          }
+        );
+      } else { 
+        // Agar browser GPS support nahi karta
+        console.warn("⚠️ Geolocation not supported by browser");
+        setInRange(false); 
+        setLoading(false); 
+      }
+
       }
     };
     init();
@@ -187,7 +219,7 @@ export default function RequestPage() {
 
         {/* Footer */}
         <div className="pb-8 text-center pt-6 border-t border-slate-50">
-            <p className="text-[8px] font-black text-slate-300 uppercase tracking-[5px] italic">Powered by {COMPANY.name}</p>
+            <p className="text-[8px] font-black text-slate-300 uppercase tracking-[5px] italic">Powered by {COMPANY?.name || "Modern Enterprises"}</p>
         </div>
       </div>
 

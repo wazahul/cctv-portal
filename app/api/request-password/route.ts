@@ -1,3 +1,4 @@
+// app/api/request-password/route.ts
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseClient"; 
 import { COMPANY } from "@/lib/config";
@@ -105,7 +106,7 @@ export async function POST(req: Request) {
     
     const { data: emailData, error: emailError } = await resend.emails.send({
       from: "CCTV Portal <onboarding@resend.dev>",
-      to: "wazahul@gmail.com",
+      to: COMPANY?.senderEmail || "wazahul@gmail.com",
       subject: `🚨 REQUEST: ${device.site_name} | ${timestamp}`,
       html: `
         <div style="font-family: sans-serif; border: 1px solid #e2e8f0; padding: 30px; border-radius: 24px; max-width: 500px; background: #ffffff;">
@@ -130,7 +131,7 @@ export async function POST(req: Request) {
           </a>
 
           <p style="text-align: center; font-size: 10px; color: #cbd5e1; margin-top: 30px; letter-spacing: 2px; font-weight: bold;">
-            ${COMPANY?.name || "Modern Enterprises"} | 2026
+            ${COMPANY?.branding?.copyRight || "Modern Enterprises | 2026"}
           </p>
         </div>
       `,

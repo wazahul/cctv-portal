@@ -1,23 +1,28 @@
-// lib/config.ts
-
+// lib/config.ts-
 export const COMPANY = {
-  name: "MODERN ENTERPRISES",
+  name: "Modern Enterprises",
   contact: "+91 7021330886",
   portalUrl: "https://cctv-portal.vercel.app/request",
   supportEmail: "me.cctv247@gmail.com",
+  senderEmail: "wazahul@gmail.com",
 
   branding: {
     tagline: "Advanced Surveillance Systems",
     tagline2: "SECURITY SOLUTIONS & INTERIOR DECORATOR",
     footerText: "High-Integrity Security Monitoring",
     copyRightYear: "2026",
+    copyRight: "2026 | MODERN ENTERPRISES"
   },
 
   links: {
   linktree: "https://linktr.ee/wazahul",
   whatsapp: "https://wa.me/917021330886",
   website: "https://modernenterprises.com",
-}
+},
+  app: {
+    name: "CCTV Portal",
+    version: "v2.0"
+  }
 
 };
 
@@ -74,4 +79,19 @@ COMPANY.branding.tagline2 // ❌ undefined
 👉 Safe version use karo:
 
 doc.text(COMPANY?.branding?.tagline2 || "", 35, 22);
+*/
+
+
+/*
+  <p className="text-[22px] text-center mt-8 sm:text-[14px] font-[1000] text-emerald-200 tracking-tighter uppercase italic leading-none">
+             <span>
+              {(COMPANY?.app?.name || "Cctv Portal").split(' ')[0]}
+             </span>
+             <span className="text-blue-200 italic ml-1.5">
+              {(COMPANY?.app?.name || "Cctv Portal").split(' ')[1] || ""}
+             </span>
+             <span className="text-blue-300/50 italic text-[14px] sm:text-[10px] ml-3 tracking-[2px] font-black">
+              {COMPANY?.app?.version || "v2.0"}
+             </span>
+            </p>
 */

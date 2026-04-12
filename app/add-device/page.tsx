@@ -1,4 +1,5 @@
 "use client";
+// app/add-device/page.tsx 
 import AuthGuard from "@/lib/components/AuthGuard";
 import { useState } from 'react';
 import dynamic from "next/dynamic"; // 🚩 Map integration ke liye
@@ -118,7 +119,7 @@ export default function AddDevicePage() {
               </div>
               <div className="text-left">
                 <h3 className="text-lg font-[1000] text-slate-900 uppercase italic tracking-tighter leading-none">Register Device</h3>
-                <p className="text-[9px] font-black text-blue-500 uppercase tracking-[3px] mt-1.5 leading-none italic">{COMPANY.name}</p>
+                <p className="text-[9px] font-black text-blue-500 uppercase tracking-[3px] mt-1.5 leading-none italic">{COMPANY?.name || "Modern Enterprises"}</p>
               </div>
             </div>
             <button onClick={() => router.back()} className="p-3 bg-slate-100 rounded-2xl text-slate-400 active:scale-90 border border-slate-200/50 shadow-inner">
@@ -207,7 +208,18 @@ export default function AddDevicePage() {
                 {loading ? 'Processing...' : 'Register Device'}
               </button>
             </div>
-            <p className="text-center text-[8px] font-black text-slate-300 uppercase tracking-[6px] italic opacity-40">Modern Enterprises Engine v2.0</p>
+            <p className="text-[22px] text-center mt-8 sm:text-[14px] font-[1000] text-emerald-200 tracking-tighter uppercase italic leading-none">
+             <span>
+              {(COMPANY?.app?.name || "Cctv Portal").split(' ')[0]}
+             </span>
+             <span className="text-blue-200 italic ml-1.5">
+              {(COMPANY?.app?.name || "Cctv Portal").split(' ')[1] || ""}
+             </span>
+             <span className="text-blue-300/50 italic text-[14px] sm:text-[10px] ml-3 tracking-[2px] font-black">
+              {COMPANY?.app?.version || "v2.0"}
+             </span>
+            </p>
+
           </div>
         </div>
       </div>

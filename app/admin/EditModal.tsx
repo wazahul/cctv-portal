@@ -1,4 +1,5 @@
 "use client";
+// app/Admin/EditModal.tsx
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { COMPANY } from "@/lib/config";
@@ -232,7 +233,17 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
               {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />} 
               {isSaving ? "SYNCING CLOUD..." : "Update Device"}
             </button>
-            <p className="text-center mt-8 text-[8px] font-black text-slate-300 uppercase tracking-[6px] italic opacity-40">Modern Cloud Engine v2.0</p>
+            <p className="text-[22px] text-center mt-8 sm:text-[14px] font-[1000] text-emerald-200 tracking-tighter uppercase italic leading-none">
+             <span>
+              {(COMPANY?.app?.name || "Cctv Portal").split(' ')[0]}
+             </span>
+             <span className="text-blue-200 italic ml-1.5">
+              {(COMPANY?.app?.name || "Cctv Portal").split(' ')[1] || ""}
+             </span>
+             <span className="text-blue-300/50 italic text-[14px] sm:text-[10px] ml-3 tracking-[2px] font-black">
+              {COMPANY?.app?.version || "v2.0"}
+             </span>
+            </p>
           </div>
 
         </div>

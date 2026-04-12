@@ -1,4 +1,5 @@
 "use client";
+// aap/admin/print-stickers/page.tsx
 import { useEffect, useState } from "react";
 import { COMPANY } from "@/lib/config";
 import { Printer, Camera } from "lucide-react";
@@ -85,10 +86,10 @@ export default function PrintStickersPage() {
 
                 <div className="w-full pt-1 border-t-2 border-dashed border-gray-200 flex flex-col items-center shrink-0">
                   <h3 className="text-[12pt] mt-5 font-[1000] text-[#1a4a8d] uppercase italic tracking-[3px] leading-none">
-                    {company.name}
+                    {company?.name || "Modern Enterprises"}
                   </h3>
                   <p className="text-slate-500 text-[8pt] font-black mt-3 leading-none pb-2">
-                     Support: {company.contact}
+                     Support: {company?.contact || "+91 7021330886"}
                   </p>
                 </div>
               </div>

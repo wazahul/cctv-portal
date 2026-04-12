@@ -1,4 +1,5 @@
 "use client";
+// aap/lib/components/StickerModal.tsx - 
 import { useState } from "react";
 import { X, Printer, CheckSquare, Square, QrCode } from "lucide-react";
 
@@ -31,6 +32,19 @@ export default function StickerModal({ isOpen, onClose, devices }: { isOpen: boo
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full text-slate-400"><X size={24} /></button>
         </div>
+
+        {/* 🔘 SELECT ALL BUTTON ADDED */}
+       <div className="px-8 pb-4 flex justify-end">
+      <button 
+      onClick={() => {
+      if (selectedIds.length === devices.length) setSelectedIds([]);
+      else setSelectedIds(devices.map(d => d.device_sn));
+      }}
+      className="text-[9px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-4 py-2 rounded-full border border-blue-100 active:scale-95 transition-all"
+     >
+    {selectedIds.length === devices.length ? "Deselect All" : "Select All Sites"}
+     </button>
+    </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-3">
           {devices.map((device) => (

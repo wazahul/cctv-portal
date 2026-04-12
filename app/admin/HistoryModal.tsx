@@ -1,4 +1,5 @@
 "use client";
+// app/admin/HistoryModal.tsx-- is line ko delet na kare 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { COMPANY } from "@/lib/config";
@@ -81,7 +82,7 @@ export default function HistoryModal({ isOpen, onClose, sn, siteName }: HistoryM
       doc.addImage(imgData, "PNG", 14, 10, 12, 12);
     } catch (e) { console.warn("Logo missing"); }
     doc.setTextColor(30, 41, 59).setFontSize(14).setFont("helvetica", "bold").text(COMPANY?.name || "MODERN ENTERPRISES", 28, 16);
-    doc.setFontSize(7).setFont("helvetica", "normal").text(`${COMPANY?.contact} | ${COMPANY?.supportEmail}`, 28, 20);
+    doc.setFontSize(7).setFont("helvetica", "normal").text(`${COMPANY?.contact || "+91 7021330886"} | ${COMPANY?.supportEmail || "me.cctv247@gmail.com"}`, 28, 20);
     doc.setDrawColor(230).line(14, 25, 196, 25);
   };
 
@@ -256,6 +257,18 @@ export default function HistoryModal({ isOpen, onClose, sn, siteName }: HistoryM
               </div>
             )}
           </main>
+
+          <p className="text-[22px] text-center my-8 sm:text-[14px] font-[1000] text-emerald-200 tracking-tighter uppercase italic leading-none">
+             <span>
+              {(COMPANY?.app?.name || "Cctv Portal").split(' ')[0]}
+             </span>
+             <span className="text-blue-200 italic ml-1.5">
+              {(COMPANY?.app?.name || "Cctv Portal").split(' ')[1] || ""}
+             </span>
+             <span className="text-blue-300/50 italic text-[14px] sm:text-[10px] ml-3 tracking-[2px] font-black">
+              {COMPANY?.app?.version || "v2.0"}
+             </span>
+            </p>
         </div>
       </div>
 

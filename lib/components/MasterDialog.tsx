@@ -1,4 +1,5 @@
 "use client";
+// app/components/MasterDialog.tsx - 
 import { AlertTriangle, CheckCircle2, Info, HelpCircle, Loader2 } from "lucide-react";
 
 interface MasterDialogProps {

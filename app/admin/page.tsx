@@ -1,4 +1,5 @@
 "use client";
+// app/admin/page.tsx
 import { useEffect, useState, useMemo } from "react";
 import { COMPANY } from "@/lib/config";
 import { useRouter } from "next/navigation";
@@ -99,24 +100,23 @@ export default function AdminCentral() {
 
       if (deviceData) {
       const processed = deviceData.map((device: any) => {
-        const logs = device.service_logs || [];
-        // 🔓 35 SAAL KA TAJARBA: List load karte waqt sensitive fields decrypt karein
-        const decryptedDevice = {
-          ...device,
-          user_pass: decryptData(device.user_pass),
-          admin_pass: decryptData(device.admin_pass),
-          v_code: decryptData(device.v_code)
-        };
+  const logs = device.service_logs || [];
 
-        const validLogs = logs
-  .filter((l: any) => l.next_service_date)
-  .sort((a: any, b: any) => 
-    new Date(b.next_service_date).getTime() - new Date(a.next_service_date).getTime()
-  );
+  // Sirf logs ko filter aur sort karein, passwords ko haath na lagayein
+  const validLogs = logs
+    .filter((l: any) => l.next_service_date)
+    .sort((a: any, b: any) => 
+      new Date(b.next_service_date).getTime() - new Date(a.next_service_date).getTime()
+    );
 
-        return { ...decryptedDevice, next_service_date: validLogs[0]?.next_service_date || null };
-      });
-      setDevices(processed);
+  // Seedha device return karein, passwords encrypted hi rahenge
+  return { 
+    ...device, 
+    next_service_date: validLogs[0]?.next_service_date || null 
+  };
+});
+
+setDevices(processed);
     }
       if (reqData) setPendingRequests(reqData);
     } catch (err) { console.error("Fetch Error:", err); } 
@@ -226,7 +226,7 @@ export default function AdminCentral() {
               <div>
         {/* 🔗 Company Branding Link */}
         <a 
-          href={COMPANY.links.linktree} 
+          href={COMPANY?.links?.linktree || "https://linktr.ee/wazahul"} 
           target="_blank" 
           rel="noopener noreferrer" 
           className="text-lg sm:text-xl font-[1000] text-black tracking-tighter uppercase leading-none hover:text-blue-500 transition-all block"
@@ -322,10 +322,26 @@ export default function AdminCentral() {
                   {isSuperAdmin && (
                     <>
                       <button onClick={() => router.push('/add-device')} className="flex-1 flex flex-col items-center gap-2 p-2 text-slate-400 active:text-emerald-600"><div className="p-3 bg-slate-50 rounded-[20px] active:bg-emerald-50"><Plus size={20} /></div><span className="text-[9px] font-black uppercase tracking-widest">Add</span></button>
-                      <button onClick={() => { setSelectedDevice(device); setIsModalOpen(true); }} className="flex-1 flex flex-col items-center gap-2 p-2 text-slate-400 active:text-orange-500"><div className="p-3 bg-slate-50 rounded-[20px] active:bg-orange-50"><Pencil size={20} /></div><span className="text-[9px] font-black uppercase tracking-widest">Edit</span></button>
+                      <button onClick={() => { const secureDevice = {
+                          ...device,
+                        user_pass: decryptData(device.user_pass),
+                        admin_pass: decryptData(device.admin_pass),
+                        v_code: decryptData(device.v_code)
+                      };
+                    setSelectedDevice(secureDevice); 
+                    setIsModalOpen(true); 
+                    }} 
+                   className="flex-1 flex flex-col items-center gap-2 p-2 text-slate-400 active:text-orange-500"
+                   >
+                <div className="p-3 bg-slate-50 rounded-[20px] active:bg-orange-50">
+                <Pencil size={20} />
+                </div>
+                <span className="text-[9px] font-black uppercase tracking-widest">Edit</span>
+              </button>
                     </>
                   )}
-                  <button onClick={() => router.push(`/service/${device.device_sn}`)} className="flex-1 flex flex-col items-center gap-2 p-2 text-slate-400 active:text-indigo-600"><div className="p-3 bg-slate-50 rounded-[20px] active:bg-indigo-50"><ClipboardList size={20} /></div><span className="text-[9px] font-black uppercase tracking-widest">Report</span></button>
+                  <button onClick={() => router.push(`/service/${device.device_sn}`)} 
+                  className="flex-1 flex flex-col items-center gap-2 p-2 text-slate-400 active:text-indigo-600"><div className="p-3 bg-slate-50 rounded-[20px] active:bg-indigo-50"><ClipboardList size={20} /></div><span className="text-[9px] font-black uppercase tracking-widest">Report</span></button>
                 </div>
               </div>
             ))}

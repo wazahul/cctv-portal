@@ -1,4 +1,5 @@
 "use client";
+// app/signup/page.tsx
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { COMPANY } from "@/lib/config";
@@ -104,7 +105,7 @@ export default function SignupPage() {
                 className="w-full p-4 bg-[#020617] border-2 border-slate-800 rounded-[25px] outline-none text-[14px] font-bold text-white focus:border-blue-500 transition-all appearance-none cursor-pointer shadow-inner"
               >
                 <option value="engineer">FIELD ENGINEER</option>
-                <option value="admin">SYSTEM ADMIN</option>
+                <option value="super_admin">SYSTEM ADMIN</option>
               </select>
             </div>
 

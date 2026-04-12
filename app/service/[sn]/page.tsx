@@ -1,4 +1,5 @@
 "use client";
+// app/service/[sn]/page.tsx
 import { useState, useEffect } from 'react';
 import { COMPANY } from '@/lib/config';
 import { supabase } from '@/lib/supabaseClient';
@@ -53,8 +54,12 @@ export default function ServiceReportPage() {
         setFormData(prev => ({ ...prev, technician_name: name }));
       }
       // Fetching Site Name using device_sn
-      const { data } = await supabase.from('devices').select('site_name').eq('device_sn', sn).maybeSingle();
-      if (data) setDevice(data);
+      const { data, error } = await supabase.from('devices').select('site_name').eq('device_sn', sn).maybeSingle();
+       if (data) {
+         setDevice(data);
+       } else {
+         console.warn("Device not found for SN:", sn);
+       }
     };
 
     fetchInitialData();
@@ -142,7 +147,7 @@ export default function ServiceReportPage() {
             </div>
             <div>
               <h3 className="text-lg font-[1000] text-slate-900 uppercase italic tracking-tighter leading-none">Create Service Report</h3>
-              <p className="text-[9px] font-black text-blue-500 uppercase tracking-[3px] mt-1 leading-none italic"> {COMPANY.name}</p>
+              <p className="text-[9px] font-black text-blue-500 uppercase tracking-[3px] mt-1 leading-none italic"> {COMPANY?.name || "Modern Enterprises"}</p>
             </div>
           </div>
           <button onClick={() => router.back()} className="p-2.5 bg-slate-100 rounded-xl text-slate-400 active:scale-90 border border-slate-200/50">
@@ -241,7 +246,17 @@ export default function ServiceReportPage() {
               {loading ? <Loader2 className="animate-spin" /> : <Save size={20} />} 
               Submit Report
             </button>
-            <p className="text-center mt-6 text-[8px] font-black text-slate-300 uppercase tracking-[6px] italic opacity-40">Modern Cloud Engine</p>
+            <p className="text-[22px] text-center mt-8 sm:text-[14px] font-[1000] text-emerald-200 tracking-tighter uppercase italic leading-none">
+             <span>
+              {(COMPANY?.app?.name || "Cctv Portal").split(' ')[0]}
+             </span>
+             <span className="text-blue-200 italic ml-1.5">
+              {(COMPANY?.app?.name || "Cctv Portal").split(' ')[1] || ""}
+             </span>
+             <span className="text-blue-300/50 italic text-[14px] sm:text-[10px] ml-3 tracking-[2px] font-black">
+              {COMPANY?.app?.version || "v2.0"}
+             </span>
+            </p>
           </div>
 
         </div>

@@ -11,6 +11,12 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { mobile, device_id, message, date_time, is_authorized } = body;
 
+    // 🚩 FIX: TypeScript Null Check
+    if (!supabaseAdmin) {
+      console.error("Critical: supabaseAdmin is not initialized. Check environment variables.");
+      return NextResponse.json({ success: false, error: "Server Configuration Error" }, { status: 500 });
+    }
+
     const host = req.headers.get("host") || "localhost:3000";
     const protocol = host.includes("localhost") ? "http" : "https";
     const baseUrl = `${protocol}://${host}`;

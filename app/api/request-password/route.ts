@@ -1,63 +1,72 @@
-// app/api/request-password/route.ts
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseClient"; 
 import { COMPANY } from "@/lib/config";
 import { Resend } from "resend";
 import { decryptData } from "@/lib/crypto";
 
-// 🚩 Resend Initialization
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
-  console.log("🚀 Request-Password API: Process Started...");
-
   try {
     const body = await req.json();
-    const { mobile, device_id, message } = body;
+    const { mobile, device_id, message, date_time, is_authorized } = body;
 
-    // 🌐 Dynamic URL Detection (Vercel aur Localhost dono ke liye)
     const host = req.headers.get("host") || "localhost:3000";
     const protocol = host.includes("localhost") ? "http" : "https";
     const baseUrl = `${protocol}://${host}`;
 
-    if (!supabaseAdmin) {
-      console.error("❌ ERROR: SUPABASE_SERVICE_ROLE_KEY is missing!");
-      return NextResponse.json({ success: false, error: "Server Configuration Error" }, { status: 500 });
+    // --- 🛡️ STEP 1: RATE LIMITS (Matching with Mobile AND Device SN) ---
+    if (!is_authorized) {
+      const now = new Date();
+      const startOfDay = new Date(); 
+      startOfDay.setUTCHours(0, 0, 0, 0);
+
+      // 1. Daily Limit (Check by Mobile Only - Overall 3 requests per day)
+      const { count } = await supabaseAdmin
+        .from("requests")
+        .select("*", { count: 'exact', head: true })
+        .eq("mobile", mobile)
+        .gte("created_at", startOfDay.toISOString());
+
+      if (count !== null && count >= 3) {
+        return NextResponse.json({ success: false, error: "Daily limit (3 requests) reached. Please try again tomorrow." }, { status: 429 });
+      }
+
+      // 2. 10-Minute Cooldown (🚩 FIX: Match Mobile AND Device SN)
+      const { data: lastReq } = await supabaseAdmin
+        .from("requests")
+        .select("created_at")
+        .eq("mobile", mobile)
+        .eq("device_sn", device_id) // ✅ Ab ye specific device match karega
+        .eq("status", "pending")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (lastReq) {
+        const lastTime = new Date(lastReq.created_at).getTime();
+        const diffInSec = Math.floor((now.getTime() - lastTime) / 1000);
+
+        if (diffInSec < 600) { 
+          return NextResponse.json({ 
+            success: false, 
+            error: "A request for this device is already pending.", 
+            wait: 600 - diffInSec 
+          }, { status: 429 });
+        }
+      }
     }
 
-    // --- 🔍 STEP 1: FETCH DEVICE DATA ---
-    const { data: device, error: fetchError } = await supabaseAdmin
+    // --- 🔍 STEP 2: FETCH DEVICE ---
+    const { data: device, error: devErr } = await supabaseAdmin
       .from("devices")
       .select("*")
       .eq("device_sn", device_id)
       .single();
 
-    if (fetchError || !device) {
-      console.error("❌ ERROR: Device not found in DB:", device_id);
-      return NextResponse.json({ success: false, error: "Device not found" }, { status: 404 });
-    }
+    if (devErr || !device) return NextResponse.json({ success: false, error: "Device not found in system." }, { status: 404 });
 
-    // --- 🛡️ STEP 2: ANTI-SPAM CHECK (Duplicate Entries Rokne ke liye) ---
-    const { data: existingRequest } = await supabaseAdmin
-      .from("requests")
-      .select("created_at")
-      .eq("device_sn", device_id)
-      .eq("mobile", mobile)
-      .eq("status", "pending")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (existingRequest) {
-      const lastTime = new Date(existingRequest.created_at).getTime();
-      const now = new Date().getTime();
-      if (now - lastTime < 60000) { // 🚩 60 Seconds ka gap
-        console.log("⚠️ INFO: Duplicate request blocked (Spam Protection)");
-        return NextResponse.json({ success: true, message: "Request already in process" });
-      }
-    }
-
-    // --- 📝 STEP 3: CREATE DATABASE ENTRY ---
+    // --- 📝 STEP 3: DATABASE INSERT ---
     const { data: newRequest, error: reqErr } = await supabaseAdmin
       .from("requests")
       .insert([{ 
@@ -65,88 +74,33 @@ export async function POST(req: Request) {
         site_name: device.site_name, 
         mobile, 
         message: message || "Password Request", 
-        status: 'pending' 
+        status: 'pending',
+        date_time: date_time 
       }])
-      .select('id')
-      .single();
+      .select('id').single();
 
-    if (reqErr || !newRequest) {
-      console.error("❌ ERROR: DB Insert Failed:", reqErr?.message);
-      return NextResponse.json({ success: false, error: "Database Logging Failed" }, { status: 500 });
-    }
+    if (reqErr) throw new Error("DB Save Failed: " + reqErr.message);
 
-    const requestId = newRequest.id;
-
-    // --- 🔓 STEP 4: DATA PREPARATION ---
+    // --- 📧 STEP 4: EMAIL NOTIFICATION ---
     const finalPass = decryptData(device.user_pass);
-    const portalId = `ME_${device.device_sn.slice(-8).slice(0, 4).toLowerCase()}`;
-    const timestamp = new Date().toLocaleString("en-IN", {
-      timeZone: "Asia/Kolkata",
-      day: "2-digit", month: "short", year: "numeric", 
-      hour: "2-digit", minute: "2-digit", hour12: true,
-    });
+    const waMsg = `*🔐 CCTV ACCESS*%0A📍Site: ${device.site_name}%0A🆔ID: user%0A🛡️Pass: ${finalPass}`;
+    const approvalLink = `${baseUrl}/api/approve?reqId=${newRequest.id}&phone=91${mobile.replace(/\D/g, "")}&msg=${waMsg}`;
 
-    const cleanMobile = mobile.replace(/\D/g, "");
-    const techMobile = cleanMobile.startsWith("91") ? cleanMobile : `91${cleanMobile}`;
-    
-    // WhatsApp Message Design
-    const rawMessage = 
-      `*🔐 CCTV ACCESS DETAILS*%0A%0A` +
-      `📍 *Site:* ${device.site_name}%0A` +
-      `🆔 *Portal ID:* ${portalId}%0A` +
-      `👤 *User Name:* user %0A` +
-      `🛡️ *User Pass:* ${finalPass}%0A%0A` +
-      `_Generated by ${COMPANY?.name || "Modern Enterprises"}_`;
-
-    // 🚩 THE MAGIC LINK (Points to /api/approve)
-    const approvalLink = `${baseUrl}/api/approve?reqId=${requestId}&phone=${techMobile}&msg=${encodeURIComponent(rawMessage)}`;
-
-    // --- 📧 STEP 5: EMAIL DISPATCH ---
-    console.log("📨 Sending Email to Admin...");
-    
-    const { data: emailData, error: emailError } = await resend.emails.send({
+    await resend.emails.send({
       from: "CCTV Portal <onboarding@resend.dev>",
       to: COMPANY?.senderEmail || "wazahul@gmail.com",
-      subject: `🚨 REQUEST: ${device.site_name} | ${timestamp}`,
-      html: `
-        <div style="font-family: sans-serif; border: 1px solid #e2e8f0; padding: 30px; border-radius: 24px; max-width: 500px; background: #ffffff;">
-          <h2 style="text-align: center; font-weight: 900; letter-spacing: -1px; text-transform: uppercase; font-style: italic; color: #1e293b;">🔐 Access Request</h2>
-          
-          <div style="background: #f8fafc; padding: 20px; border-radius: 18px; border: 1px solid #f1f5f9; margin-bottom: 25px;">
-            <p style="margin: 5px 0; font-size: 14px;"><b>📍 Site:</b> ${device.site_name}</p>
-        <p style="margin: 5px 0; font-size: 14px;"><b>🆔 Portal ID:</b> ${portalId}</p>
-        <p style="margin: 5px 0; font-size: 14px;"><b>📱 User Mobile:</b> ${mobile}</p>
-
-            <div style="margin-top: 15px; padding-top: 15px; border-top: 2px dashed #e2e8f0;">
-          <p style="margin: 0; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #94a3b8; font-weight: bold;">User Message:</p>
-          <p style="margin: 5px 0; font-size: 15px; color: #1e293b; font-weight: 600; font-style: italic;">
-            "${message || "Password Request"}"
-          </p>
-        </div>
-            <p style="margin: 15px 0 0 0; color: #94a3b8; font-size: 10px; font-weight: bold; text-transform: uppercase;">⏰ Requested At: ${timestamp}</p>
-          </div>
-
-          <a href="${approvalLink}" style="display: block; text-align: center; background: #2563eb; color: white; padding: 20px; border-radius: 20px; text-decoration: none; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);">
-             Approve & WhatsApp
-          </a>
-
-          <p style="text-align: center; font-size: 10px; color: #cbd5e1; margin-top: 30px; letter-spacing: 2px; font-weight: bold;">
-            ${COMPANY?.branding?.copyRight || "Modern Enterprises | 2026"}
-          </p>
-        </div>
-      `,
+      subject: `🚨 REQUEST: ${device.site_name}`,
+      html: `<div style="font-family:sans-serif; border:1px solid #eee; padding:30px; border-radius:20px;">
+               <h3>🔐 Access Request</h3>
+               <p><b>Site:</b> ${device.site_name}</p>
+               <p><b>Mobile:</b> ${mobile}</p>
+               <a href="${approvalLink}" style="background:#2563eb; color:#fff; padding:15px; border-radius:10px; text-decoration:none;">APPROVE</a>
+             </div>`
     });
 
-    if (emailError) {
-      console.error("❌ ERROR: Resend Failed:", emailError);
-      return NextResponse.json({ success: false, error: emailError.message }, { status: 500 });
-    }
-
-    console.log("✅ SUCCESS: Request Logged & Email Sent!");
-    return NextResponse.json({ success: true, id: emailData?.id });
+    return NextResponse.json({ success: true });
 
   } catch (err: any) {
-    console.error("🚨 CRITICAL ERROR:", err.message);
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }

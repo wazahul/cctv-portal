@@ -1,19 +1,17 @@
 "use client";
-// app/request/[deviceId]/page.tsx
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { COMPANY } from "@/lib/config";
 import { 
-  Loader2, ShieldCheck, XCircle, Smartphone, 
-  History as HistoryIcon, Lock, Timer, MapPin, HelpCircle, MessageSquare, CheckCircle2
+  Loader2, Lock, Timer, History as HistoryIcon, 
+  Smartphone, MessageSquare, HelpCircle, CheckCircle2, XCircle 
 } from "lucide-react";
 import HistoryModal from "../../admin/HistoryModal";
 import MasterDialog from "@/lib/components/MasterDialog";
 
 export default function RequestPage() {
   const params = useParams();
-  const router = useRouter(); 
   const deviceId = params.deviceId as string; 
 
   const [device, setDevice] = useState<any>(null);
@@ -24,106 +22,97 @@ export default function RequestPage() {
   const [reqLoading, setReqLoading] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [cooldownTime, setCooldownTime] = useState(0); 
   const [dialog, setDialog] = useState({ isOpen: false, title: "", message: "", type: "info" as any });
 
   useEffect(() => {
     const init = async () => {
-      // 1. Get User Role for Bypass Logic
+      // 1. Get Session & Security Flag
       const { data: { session } } = await supabase.auth.getSession();
-      const role = session?.user?.user_metadata?.role || "user";
+      const role = session?.user?.user_metadata?.role;
+      const authorized = role === "super_admin" || role === "engineer";
+      setIsAuthorized(authorized);
 
-      // 2. Fetch Device Data
+      // 2. Fetch Device
       const { data: dev } = await supabase.from("devices").select("*").eq("device_sn", deviceId).single();
       if (dev) {
         setDevice(dev);
+        if (authorized) { setInRange(true); setLoading(false); return; }
 
-        // 🚩 MASTER LOGIC: Admin or Engineer bypasses GPS check
-        if (role === "super_admin" || role === "engineer") {
-          setInRange(true);
-          setLoading(false);
-          return;
-        }
-
-        // 3. Regular User GPS Check
-      if ("geolocation" in navigator) {
-        // 🎯 Accurate tracking ke liye navigator options set kiye hain
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            const R = 6371000; // Earth radius in meters
-            const userLat = pos.coords.latitude;
-            const userLon = pos.coords.longitude;
-            const devLat = dev.latitude;
-            const devLon = dev.longitude;
-
-            // 📐 Haversine Formula: Do points ke beech ka rasta nikalne ke liye
-            const dLat = (devLat - userLat) * Math.PI / 180;
-            const dLon = (devLon - userLon) * Math.PI / 180;
-            
-            const a = 
-              Math.sin(dLat/2) * Math.sin(dLat/2) + 
-              Math.cos(userLat * Math.PI/180) * Math.cos(devLat * Math.PI/180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-            
-            const distance = R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
-            
-            // 📏 Geofence Check: Kya user radius (default 200m) ke andar hai?
-            setInRange(distance <= (dev.radius || 200));
-            setLoading(false);
-          }, 
-          (err) => { 
-            console.error("🚨 GPS Connection Failed:", err.message);
-            // Error aane par access block karein
-            setInRange(false); 
-            setLoading(false); 
-          }, 
-          { 
-            enableHighAccuracy: true, // 🎯 Sabse accurate GPS data
-            timeout: 12000,           // ⏰ 12 second tak wait karega (Satellite link fix)
-            maximumAge: 0             // 🔄 Cache location use nahi karega, hamesha fresh data
-          }
-        );
-      } else { 
-        // Agar browser GPS support nahi karta
-        console.warn("⚠️ Geolocation not supported by browser");
-        setInRange(false); 
-        setLoading(false); 
-      }
-
+        if ("geolocation" in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              const R = 6371000;
+              const dLat = (dev.latitude - pos.coords.latitude) * Math.PI / 180;
+              const dLon = (dev.longitude - pos.coords.longitude) * Math.PI / 180;
+              const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(pos.coords.latitude * Math.PI/180) * Math.cos(dev.latitude * Math.PI/180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+              const distance = R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+              setInRange(distance <= (dev.radius || 200));
+              setLoading(false);
+            }, 
+            () => { setInRange(false); setLoading(false); }, 
+            { enableHighAccuracy: true, timeout: 10000 }
+          );
+        } else { setInRange(false); setLoading(false); }
       }
     };
     init();
   }, [deviceId]);
 
+  useEffect(() => {
+    if (cooldownTime > 0) {
+      const timer = setInterval(() => setCooldownTime(p => p - 1), 1000);
+      return () => clearInterval(timer);
+    }
+  }, [cooldownTime]);
+
   const handleRequest = async () => {
-  if (!mobile || mobile.length !== 10) {
-      setDialog({ isOpen: true, title: "Error", message: "Please enter a valid 10-digit mobile number.", type: "warning" });
+    if (mobile.length !== 10) {
+      setDialog({ isOpen: true, title: "Invalid", message: "Please enter a valid 10-digit number.", type: "warning" });
       return;
-  }
-  setReqLoading(true);
-  try {
-    const res = await fetch("/api/request-password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mobile, device_id: deviceId, message: message || "Password Request" }),
-    });
-    const result = await res.json();
-    if (!result.success) throw new Error(result.error);
+    }
+    setReqLoading(true);
 
-    setDialog({ isOpen: true, title: "Success", message: "Request sent successfully. You will be contacted via WhatsApp.", type: "success" });
-    setMobile(""); setMessage(""); setIsFormOpen(false);
-  } catch (err: any) {
-    setDialog({ isOpen: true, title: "Error", message: "Dispatch failed. Please check your connection.", type: "danger" });
-  } finally { setReqLoading(false); }
-};
+    try {
+      const currentLocalTime = new Intl.DateTimeFormat('en-IN', {
+        dateStyle: 'medium', timeStyle: 'medium', timeZone: 'Asia/Kolkata',
+      }).format(new Date());
 
-  if (loading) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc]">
-      <Loader2 className="animate-spin text-blue-600 mb-4" size={32} />
-      <p className="text-[10px] font-black uppercase tracking-[4px] text-slate-400 italic">Authenticating Access...</p>
-    </div>
-  );
+      const res = await fetch("/api/request-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          mobile, device_id: deviceId, 
+          message: message || "Password Request",
+          date_time: currentLocalTime,
+          is_authorized: isAuthorized // 🛡️ Passing bypass flag to API
+        }),
+      });
+
+      const result = await res.json();
+      if (!result.success) {
+        if (result.wait) setCooldownTime(result.wait);
+        setDialog({ isOpen: true, title: "Blocked", message: result.error, type: "danger" });
+      } else {
+        setDialog({ isOpen: true, title: "Success", message: "Request sent successfully. You will be contacted via WhatsApp.", type: "success" });
+        setMobile(""); setMessage(""); setIsFormOpen(false);
+      }
+    } catch (err: any) {
+      setDialog({ isOpen: true, title: "Error", message: "Dispatch failed. Please check your connection.", type: "danger" });
+    } finally { setReqLoading(false); }
+  };
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><Loader2 className="animate-spin text-blue-600" /></div>;
 
   return (
-    <div className="min-h-screen bg-[#F1F5F9] flex flex-col items-center justify-center p-4 sm:p-6 text-left">
+     <div className="min-h-screen bg-[#F1F5F9] flex flex-col items-center justify-center p-4 sm:p-6 text-left">
       <div className="w-full max-w-[420px] bg-white rounded-[45px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.1)] overflow-hidden border border-white flex flex-col transition-all duration-500">
         
         {/* Header */}
@@ -138,43 +127,32 @@ export default function RequestPage() {
         </div>
 
         {/* Action Body */}
-        <div className="p-6 sm:p-8 space-y-4">
+        <div className="p-8 space-y-6">
           {inRange ? (
             <div className="space-y-6">
-              
-              {/* Grid Menu Actions */}
-              {!isFormOpen && (
-                <div className="grid grid-cols-2 gap-4 animate-in fade-in zoom-in-95 duration-500">
-                  <button 
-                    onClick={() => setIsFormOpen(true)}
-                    className="flex flex-col items-center justify-center p-6 bg-slate-50 border-2 border-slate-100 rounded-[35px] hover:border-blue-200 hover:bg-white transition-all group active:scale-95"
-                  >
-                    <div className="p-3 bg-blue-50 rounded-2xl mb-3 group-hover:bg-blue-100 transition-colors">
-                      <HelpCircle className="text-blue-500" size={28} />
+              {!isFormOpen ? (
+                <div className="grid grid-cols-2 gap-4 animate-in fade-in duration-500">
+                  <button onClick={() => setIsFormOpen(true)} className="flex flex-col items-center p-8 bg-slate-50 rounded-[40px] border-2 border-slate-100 active:scale-95 transition-all group shadow-sm hover:bg-white hover:border-blue-200">
+                    <div className="p-4 bg-blue-100 rounded-3xl mb-4 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                      <HelpCircle size={28} />
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-600 text-center leading-tight">Forgot<br/>Password</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-700">Forgot<br/>Password</span>
                   </button>
-
-                  <button 
-                    onClick={() => setIsHistoryOpen(true)}
-                    className="flex flex-col items-center justify-center p-6 bg-slate-50 border-2 border-slate-100 rounded-[35px] hover:border-emerald-200 hover:bg-white transition-all group active:scale-95"
-                  >
-                    <div className="p-3 bg-emerald-50 rounded-2xl mb-3 group-hover:bg-emerald-100 transition-colors">
-                      <HistoryIcon className="text-emerald-500" size={28} />
+                  <button onClick={() => setIsHistoryOpen(true)} className="flex flex-col items-center p-8 bg-slate-50 rounded-[40px] border-2 border-slate-100 active:scale-95 transition-all group shadow-sm hover:bg-white hover:border-emerald-200">
+                    <div className="p-4 bg-emerald-100 rounded-3xl mb-4 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                      <HistoryIcon size={28} />
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-600 text-center leading-tight">Maintenance<br/>History</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-700">Maintenance<br/>History</span>
                   </button>
                 </div>
-              )}
-
-              {/* Request Form */}
-              {isFormOpen && (
-                <div className="space-y-4 animate-in slide-in-from-top-4 duration-500 bg-blue-50/30 p-6 rounded-[35px] border-2 border-blue-50">
-                  <div className="text-center mb-4">
-                    <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest italic">Access Request</p>
+              ) : (
+                <div className="space-y-5 animate-in slide-in-from-top-4 duration-500 bg-slate-50/80 p-6 rounded-[40px] border border-slate-100">
+                  <div className="flex items-center gap-2 px-2">
+                    <Timer size={14} className="text-blue-500 animate-pulse" />
+                    <span className="text-[10px] tracking-[4px] font-black text-slate-400 uppercase italic">Access Request</span>
                   </div>
-                  
-                  <div className="relative group">
+
+                  <div className="relative">
                     <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500" size={18} />
                     <input 
                       type="tel" maxLength={10} placeholder="WhatsApp Number" 
@@ -183,8 +161,8 @@ export default function RequestPage() {
                     />
                   </div>
 
-                  <div className="relative group">
-                    <MessageSquare className="absolute left-4 top-4 text-slate-300 group-focus-within:text-blue-500" size={18} />
+                  <div className="relative">
+                    <MessageSquare className="absolute left-4 top-4 text-slate-300 group-focus-within:text-emerald-500" size={18} />
                     <textarea 
                       placeholder="Issue Details..." rows={2}
                       className="w-full py-4 pl-12 pr-4 bg-white border-2 border-slate-100 rounded-[22px] outline-none font-bold text-xs focus:border-blue-500 transition-all resize-none shadow-inner"
@@ -192,15 +170,20 @@ export default function RequestPage() {
                     />
                   </div>
 
-                  <button 
-                    onClick={handleRequest} 
-                    disabled={reqLoading || mobile.length < 10}
-                    className="w-full bg-blue-600 text-white py-4 rounded-[22px] font-black uppercase text-[10px] tracking-[3px] shadow-xl shadow-blue-100 disabled:opacity-50 active:scale-95 transition-all flex items-center justify-center gap-2 border-b-4 border-blue-800"
-                  >
-                    {reqLoading ? <Loader2 className="animate-spin" size={16} /> : <ShieldCheck size={16} />}
-                    Submit Request
-                  </button>
-                  
+                  {cooldownTime > 0 ? (
+                    <div className="bg-orange-50 border-2 border-dashed border-orange-100 p-4 rounded-[25px] flex flex-col items-center justify-center">
+                        <p className="text-[8px] font-black text-orange-600 uppercase tracking-widest mb-1 italic">Cooldown Active</p>
+                        <p className="text-xl font-[1000] text-orange-600 tracking-tighter">{formatTime(cooldownTime)}</p>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={handleRequest} 
+                      disabled={reqLoading || mobile.length < 10}
+                      className="w-full bg-blue-600 text-white py-5 rounded-[25px] font-[1000] uppercase text-[11px] tracking-[4px] shadow-xl active:scale-95 disabled:opacity-50 transition-all italic border-b-4 border-blue-900"
+                    >
+                      {reqLoading ? <Loader2 className="animate-spin" size={18} /> : "Submit Request"}
+                    </button>
+                  )}
                   <button onClick={() => setIsFormOpen(false)} className="w-full text-[9px] font-black text-slate-400 uppercase tracking-[2px] pt-1">Go Back</button>
                 </div>
               )}
@@ -210,16 +193,16 @@ export default function RequestPage() {
                <div className="bg-red-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto border-4 border-white shadow-lg">
                   <XCircle size={40} className="text-red-500" />
                </div>
-               <h2 className="text-xl font-black uppercase italic text-slate-800">Out of Range</h2>
-               <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[4px] px-4 leading-relaxed"> Please be present at the site to sync GPS. </p>
-               <button onClick={() => window.location.reload()} className="bg-slate-900 text-white px-10 py-5 rounded-[22px] font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-90 transition-all">Retry GPS Sync</button>
+              <h2 className="text-xl font-black uppercase italic text-slate-800">Out of Range</h2>
+              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[4px] mt-2 leading-relaxed px-4"> Please be present at the site to sync GPS. </p>
+              <button onClick={() => window.location.reload()} className="bg-slate-900 text-white px-10 py-5 rounded-[22px] font-black uppercase text-[10px] tracking-widest active:scale-90 transition-all border-b-4 border-black">Retry GPS Sync</button>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="pb-8 text-center pt-6 border-t border-slate-50">
-            <p className="text-[8px] font-black text-slate-300 uppercase tracking-[5px] italic">Powered by {COMPANY?.name || "Modern Enterprises"}</p>
+        <div className="pb-10 text-center border-t border-slate-50 pt-6">
+          <p className="text-[8px] font-black text-slate-400 uppercase tracking-[2px] italic">{COMPANY?.branding?.tagline2 || "SECURITY SOLUTIONS & INTERIOR DECORATOR"}</p>
         </div>
       </div>
 

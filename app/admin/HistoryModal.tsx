@@ -258,14 +258,14 @@ export default function HistoryModal({ isOpen, onClose, sn, siteName }: HistoryM
             )}
           </main>
 
-          <p className="text-[22px] text-center my-8 sm:text-[14px] font-[1000] text-emerald-200 tracking-tighter uppercase italic leading-none">
+          <p className="text-[22px] text-center my-8 sm:text-[10px] font-[1000] text-emerald-200 tracking-tighter uppercase italic leading-none">
              <span>
               {(COMPANY?.app?.name || "Cctv Portal").split(' ')[0]}
              </span>
              <span className="text-blue-200 italic ml-1.5">
               {(COMPANY?.app?.name || "Cctv Portal").split(' ')[1] || ""}
              </span>
-             <span className="text-blue-300/50 italic text-[14px] sm:text-[10px] ml-3 tracking-[2px] font-black">
+             <span className="text-blue-300/50 italic text-[14px] sm:text-[8px] ml-3 tracking-[2px] font-black">
               {COMPANY?.app?.version || "v2.0"}
              </span>
             </p>

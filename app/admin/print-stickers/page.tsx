@@ -84,6 +84,7 @@ export default function PrintStickersPage() {
                   </div>
                 </div>
 
+                {/* 🏢 Branded Footer */}
                 <div className="w-full pt-1 border-t-2 border-dashed border-gray-200 flex flex-col items-center shrink-0">
                   <h3 className="text-[12pt] mt-5 font-[1000] text-[#1a4a8d] uppercase italic tracking-[3px] leading-none">
                     {company?.name || "Modern Enterprises"}

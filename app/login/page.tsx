@@ -66,7 +66,7 @@ export default function LoginPage() {
               <div className="flex items-center gap-2 mt-2">
                 <Activity size={10} className="text-blue-500 animate-pulse" />
                 <span className="text-[9px] font-black text-slate-500 uppercase tracking-[3px] italic leading-none">
-                  Surveillance System
+                  Surveillance System2
                 </span>
               </div>
             </div>

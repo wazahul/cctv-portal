@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { COMPANY } from "@/lib/config";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import AuthGuard from "@/lib/components/AuthGuard"; 
+import AuthGuard from "@/lib/components/AuthGuard";
 import RequestManagerModal, { RequestNotification } from "../request/RequestManagerModal";
 import { decryptData, encryptData } from '@/lib/crypto';
 import StickerModal from "@/lib/components/StickerModal";

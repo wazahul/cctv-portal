@@ -1,13 +1,16 @@
+// lib/supabaseClient.ts
 import { createBrowserClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY; // Only available on Server
+
+// 🛡️ Service Role Key sirf server par available hogi
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 /**
  * 🌐 1. PUBLIC CLIENT (For Frontend/Client Components)
- * Ye client browser mein auth aur realtime handle karega.
+ * Standard SSR compatible browser client.
  */
 export const supabase = createBrowserClient(
   supabaseUrl,
@@ -16,8 +19,8 @@ export const supabase = createBrowserClient(
 
 /**
  * 🛡️ 2. ADMIN CLIENT (For API Routes & Server Actions)
- * Ye client authentication ko bypass kar sakta hai. 
- * Iska istemal sirf backend files (.ts) mein karein.
+ * Iska use wahan karein jahan Auth Rules bypass karne hon (e.g. Password Reset)
+ * CRITICAL: NEVER import this into a 'use client' file.
  */
 export const supabaseAdmin = supabaseServiceKey 
   ? createClient(supabaseUrl, supabaseServiceKey, {
@@ -27,9 +30,3 @@ export const supabaseAdmin = supabaseServiceKey
       }
     })
   : null;
-
-/**
- * 💡 TIP: 
- * Client Components mein "supabase" use karein.
- * API Routes (app/api/...) mein "supabaseAdmin" use karein.
- */

@@ -40,8 +40,13 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
-    }
-      else {
+      const setHeight = () => {
+        const vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+      };
+      window.addEventListener('resize', setHeight);
+      setHeight();
+    } else {
       document.body.style.overflow = 'unset';
     }
     return () => { document.body.style.overflow = 'unset'; };
@@ -79,7 +84,9 @@ export default function EditModal({ isOpen, device, onClose, onUpdate, isSaving,
   return (
     <div className="fixed inset-0 z-[999] bg-slate-900/60 backdrop-blur-md flex items-stretch sm:items-center justify-center p-0 animate-in fade-in duration-300">
       
-      <div className="bg-[#fcfdfe] w-full max-w-xl h-[100dvh] sm:h-auto sm:max-h-[95vh] sm:rounded-[45px] shadow-2xl flex flex-col overflow-hidden relative animate-in slide-in-from-bottom duration-500">
+      <div 
+        style={{ height: 'calc(var(--vh, 1vh) * 100)' }}
+        className="bg-[#fcfdfe] w-full max-w-xl sm:h-auto sm:max-h-[95vh] sm:rounded-[45px] shadow-2xl flex flex-col overflow-hidden relative animate-in slide-in-from-bottom duration-500" >
         
         {/* 🏗️ STICKY HEADER */}
         <div className="sticky top-0 z-[110] bg-white/95 backdrop-blur-xl p-6 flex justify-between items-center shrink-0 pt-[calc(env(safe-area-inset-top)+1rem)] border-b border-slate-50">

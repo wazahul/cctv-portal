@@ -2,7 +2,7 @@
 import CryptoJS from 'crypto-js';
 
 // 🚩 Hardcoded Key: Isse mismatch ka khatra khatam
-const SECRET_KEY = process.env.NEXT_PUBLIC_CRYPTO_KEY || 'MODERN_ENT_2026_SECURE';
+const SECRET_KEY = process.env.CRYPTO_KEY || 'MODERN_ENT_2026_SECURE';
 
 /**
  * 🔓 DECRYPT DATA

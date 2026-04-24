@@ -1,6 +1,6 @@
 "use client";
 // app/admin/page.tsx
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { COMPANY } from "@/lib/config";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
@@ -33,59 +33,6 @@ export default function AdminCentral() {
   const [selectedDevice, setSelectedDevice] = useState<any>(null);
   const [isStickerOpen, setIsStickerOpen] = useState(false);
 
-  // --- DATA FETCHING ---
-  // Import useCallback from 'react'
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [devRes, reqRes] = await Promise.all([
-        supabase.from("devices").select(`*, service_logs (next_service_date)`).order("site_name", { ascending: true }),
-        supabase.from("requests").select("*").eq("status", "pending").order("created_at", { ascending: false })
-      ]);
-
-      if (devRes.data) {
-        const processed = devRes.data.map((device: any) => {
-          const validLogs = (device.service_logs || [])
-            .filter((l: any) => l.next_service_date)
-            .sort((a: any, b: any) => new Date(b.next_service_date).getTime() - new Date(a.next_service_date).getTime());
-          return { ...device, next_service_date: validLogs[0]?.next_service_date || null };
-        });
-        setDevices(processed);
-      }
-      if (reqRes.data) setPendingRequests(reqRes.data);
-    } catch (err) {
-      console.error("Fetch Error:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // --- INITIALIZE & REALTIME ---
-  useEffect(() => {
-  const initialize = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      const metadata = session.user.user_metadata;
-      setUserRole(metadata?.role || "user");
-      const fullName = metadata?.full_name || metadata?.name || session.user.email?.split('@')[0];
-      setUserName(fullName);
-      
-      fetchData();
-    }
-  };
-  initialize();
-
-  // Realtime Listener
-  const channel = supabase
-    .channel('admin-realtime-v3')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'requests' }, () => {
-      fetchData();
-    })
-    .subscribe();
-
-  return () => { supabase.removeChannel(channel); };
-}, []);
-
   // --- MASTER DIALOG STATE ---
   const [dialog, setDialog] = useState<{
     isOpen: boolean;
@@ -106,6 +53,75 @@ export default function AdminCentral() {
   const [isReqManagerOpen, setIsReqManagerOpen] = useState(false);
   const [filterSn, setFilterSn] = useState<string | null>(null);
 
+  // --- INITIALIZE & REALTIME ---
+  useEffect(() => {
+    const initialize = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        const metadata = session.user.user_metadata;
+        
+        // 🚩 STEP 2: Role ke saath Name bhi set karein
+        setUserRole(metadata?.role || "user");
+        
+        // Agar full_name metadata mein hai toh wo, warna email ka pehla part
+        const fullName = metadata?.full_name || metadata?.name || session.user.email?.split('@')[0];
+        setUserName(fullName);
+        
+        fetchData(); 
+      }
+    };
+    initialize();
+
+    const channel = supabase
+      .channel('admin-realtime-v3')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'requests' }, () => {
+        fetchData();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
+  // --- DATA FETCHING ---
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const { data: deviceData } = await supabase
+        .from("devices")
+        .select(`*, service_logs (next_service_date)`)
+        .order("site_name", { ascending: true });
+
+      const { data: reqData } = await supabase
+        .from("requests")
+        .select("*")
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
+
+      if (deviceData) {
+      const processed = deviceData.map((device: any) => {
+  const logs = device.service_logs || [];
+
+  // Sirf logs ko filter aur sort karein, passwords ko haath na lagayein
+  const validLogs = logs
+    .filter((l: any) => l.next_service_date)
+    .sort((a: any, b: any) => 
+      new Date(b.next_service_date).getTime() - new Date(a.next_service_date).getTime()
+    );
+
+  // Seedha device return karein, passwords encrypted hi rahenge
+  return { 
+    ...device, 
+    next_service_date: validLogs[0]?.next_service_date || null 
+  };
+});
+
+setDevices(processed);
+    }
+      if (reqData) setPendingRequests(reqData);
+    } catch (err) { console.error("Fetch Error:", err); } 
+    finally { setLoading(false); }
+  };
 
   // ✅ DATABASE UPDATE LOGIC (Triggered by Master Dialog)
   const handleUpdateDevice = async () => {
@@ -169,18 +185,11 @@ export default function AdminCentral() {
     });
   };
 
-  // Navigation Fix
   const trackOnMap = (device: any) => {
-  const { latitude, longitude } = device;
-  
-  if (!latitude || !longitude) {
-    return alert("⚠️ Is site ki location (Lat/Long) database mein nahi hai!");
-  }
-
-  const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}&travelmode=driving`;
-
-  window.open(url, '_blank', 'noopener,noreferrer');
-};
+    const { latitude, longitude } = device;
+    if (!latitude || !longitude) return alert("⚠️ Location missing");
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`, '_blank');
+  };
 
   const filtered = useMemo(() => devices.filter(d => 
     [d.site_name, d.device_sn, d.ip_address].some(val => val?.toLowerCase().includes(search.toLowerCase()))
@@ -313,39 +322,22 @@ export default function AdminCentral() {
                   {isSuperAdmin && (
                     <>
                       <button onClick={() => router.push('/add-device')} className="flex-1 flex flex-col items-center gap-2 p-2 text-slate-400 active:text-emerald-600"><div className="p-3 bg-slate-50 rounded-[20px] active:bg-emerald-50"><Plus size={20} /></div><span className="text-[9px] font-black uppercase tracking-widest">Add</span></button>
-                   
-                      <button 
-                        onClick={async () => {
-                         setLoading(true); 
-                         try {
-      
-                             const res = await fetch("/api/reveal-password", {
-                             method: "POST",
-                            body: JSON.stringify({ device_sn: device.device_sn }),
-                              });
-                            const decryptedData = await res.json();
-
-                          if (decryptedData.error) throw new Error(decryptedData.error);
-
-      
-                         setSelectedDevice({
-                         ...device,
-                         ...decryptedData 
-                         });
-                         setIsModalOpen(true);
-                         } catch (err: any) {
-                          alert("Security Error: Identity verification failed or " + err.message);
-                        } finally {
-                      setLoading(false);
-                        }
-                       }} 
-                      className="flex-1 flex flex-col items-center gap-2 p-2 text-slate-400 active:text-orange-500"
-                      >
-                     <div className="p-3 bg-slate-50 rounded-[20px] active:bg-orange-50">
-                   <Pencil size={20} />
-                   </div>
-                  <span className="text-[9px] font-black uppercase tracking-widest">Edit</span>
-                  </button>
+                      <button onClick={() => { const secureDevice = {
+                          ...device,
+                        user_pass: decryptData(device.user_pass),
+                        admin_pass: decryptData(device.admin_pass),
+                        v_code: decryptData(device.v_code)
+                      };
+                    setSelectedDevice(secureDevice); 
+                    setIsModalOpen(true); 
+                    }} 
+                   className="flex-1 flex flex-col items-center gap-2 p-2 text-slate-400 active:text-orange-500"
+                   >
+                <div className="p-3 bg-slate-50 rounded-[20px] active:bg-orange-50">
+                <Pencil size={20} />
+                </div>
+                <span className="text-[9px] font-black uppercase tracking-widest">Edit</span>
+              </button>
                     </>
                   )}
                   <button onClick={() => router.push(`/service/${device.device_sn}`)} 

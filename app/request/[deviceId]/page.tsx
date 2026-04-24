@@ -1,4 +1,5 @@
 "use client";
+// app/request/[deviceId]/page.tsx
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";

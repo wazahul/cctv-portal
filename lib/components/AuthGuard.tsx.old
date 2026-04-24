@@ -82,7 +82,7 @@ export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
       }
     };
 
-    if (!authorized) checkUser();
+    checkUser();
 
     // 🔄 REALTIME AUTH LISTENER
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -99,7 +99,7 @@ export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
       document.body.style.overflow = 'unset';
       subscription.unsubscribe();
     };
-  }, [router, JSON.stringify(allowedRoles)]);
+  }, [router, allowedRoles, authorized]);
 
   // 🚫 1. Access Denied View
   if (errorStatus === "ACCESS_DENIED") {
